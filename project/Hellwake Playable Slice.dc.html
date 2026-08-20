@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Barlow+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; height:100%; overflow:hidden; background:#04050700; }
+  body { background:#050609; }
+  @keyframes hw-pip { 0%,100% { opacity:.3 } 50% { opacity:1 } }
+  @keyframes hw-banner { 0% { opacity:0; letter-spacing:.5em } 18% { opacity:1; letter-spacing:.16em } 78% { opacity:1 } 100% { opacity:0 } }
+</style>
+</helmet>
+
+<div style="position:relative; width:100vw; height:100vh; overflow:hidden; background:#050609; font-family:'Barlow Condensed',sans-serif; color:#cfd5dc;">
+
+  <div id="hw-stage" style="position:absolute; inset:0;"></div>
+
+  <div style="position:absolute; inset:0; pointer-events:none; background:radial-gradient(74% 62% at 50% 52%, rgba(0,0,0,0) 42%, rgba(3,4,7,.55) 86%, rgba(2,3,5,.9));"></div>
+  <div style="position:absolute; inset:0; pointer-events:none; opacity:.12; background-image:radial-gradient(rgba(255,255,255,.5) .5px, rgba(0,0,0,0) .6px); background-size:3px 3px; mix-blend-mode:overlay;"></div>
+
+  <div style="position:absolute; left:50%; top:50%; width:1920px; height:1080px; margin:-540px 0 0 -960px; transform:scale({{ fit }}); transform-origin:center center; pointer-events:none; font-size:12px;">
+
+    <div style="position:absolute; inset:0; opacity:{{ opCine }}; transition:opacity .5s;">
+      <div style="position:absolute; left:0; right:0; top:0; height:96px; background:#030406;"></div>
+      <div style="position:absolute; left:0; right:0; bottom:0; height:96px; background:#030406;"></div>
+    </div>
+
+    <div style="position:absolute; left:34px; top:28px; display:flex; align-items:center; gap:11px; opacity:{{ opHud }}; transition:opacity .4s;">
+      <div style="width:52px; height:52px; clip-path:polygon(50% 0,100% 26%,100% 74%,50% 100%,0 74%,0 26%); background:linear-gradient(180deg,#26221e,#08080b); padding:2px; box-sizing:border-box;">
+        <div style="width:100%; height:100%; clip-path:polygon(50% 0,100% 26%,100% 74%,50% 100%,0 74%,0 26%); background-image:url('refs/a-5.png'); background-size:190%; background-position:48% 16%; filter:contrast(1.08) saturate(.85) brightness(.9);"></div>
+      </div>
+      <div>
+        <div style="display:flex; align-items:baseline; gap:9px;">
+          <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px; letter-spacing:.16em; color:#ded4c7;">KAERVOSS</div>
+          <div style="font-size:12px; letter-spacing:.2em; color:#767c85;">LV {{ level }}</div>
+        </div>
+        <div style="margin-top:5px; width:218px; height:9px; background:rgba(6,8,11,.78); box-shadow:inset 0 0 0 1px rgba(180,158,124,.24); position:relative;">
+          <div style="width:{{ hp }}%; height:100%; background:linear-gradient(90deg,#6d100d,#c8342a); box-shadow:0 0 9px rgba(200,52,34,.6);"></div>
+          <div style="position:absolute; inset:0; background:repeating-linear-gradient(90deg, rgba(0,0,0,.6) 0 1px, rgba(0,0,0,0) 1px 44px);"></div>
+        </div>
+        <div style="margin-top:3px; width:150px; height:4px; background:rgba(6,8,11,.78); box-shadow:inset 0 0 0 1px rgba(140,162,188,.2);">
+          <div style="width:{{ wrath }}%; height:100%; background:linear-gradient(90deg,#2b6b8d,#93d2e8); box-shadow:0 0 8px rgba(120,196,230,.5);"></div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:8px; min-height:12px;">
+          <sc-for list="{{ statuses }}" as="s" hint-placeholder-count="0">
+            <div style="display:flex; align-items:center; gap:5px; white-space:nowrap;">
+              <div style="width:9px; height:9px; transform:rotate(45deg); background:{{ s.color }}; box-shadow:0 0 8px {{ s.color }};"></div>
+              <div style="font-size:11px; letter-spacing:.14em; color:#8f959e;">{{ s.short }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div style="position:absolute; left:50%; top:8.4%; transform:translateX(-50%); width:420px; text-align:center; opacity:{{ opBoss }}; transition:opacity .4s;">
+      <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
+        <div style="width:7px; height:7px; transform:rotate(45deg); background:#ff7a2e; box-shadow:0 0 10px #ff7a2e;"></div>
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:15px; letter-spacing:.3em; color:#e6dccf; white-space:nowrap; text-shadow:0 2px 6px rgba(0,0,0,.95);">GRAVEWARDEN</div>
+        <div style="font-size:12px; letter-spacing:.24em; color:#ff9a52;">ELITE</div>
+      </div>
+      <div style="margin:6px auto 0; width:340px; height:5px; background:rgba(6,8,11,.72); box-shadow:0 0 0 1px rgba(0,0,0,.7), inset 0 0 0 1px rgba(180,158,124,.22);">
+        <div style="width:{{ bossHp }}%; height:100%; background:linear-gradient(90deg,#8e1a12,#e8571f); box-shadow:0 0 10px rgba(255,96,28,.7);"></div>
+      </div>
+      <div style="margin-top:5px; font-size:12px; letter-spacing:.22em; color:#8a8e96; white-space:nowrap;">{{ bossAffixes }}</div>
+    </div>
+
+    <div style="position:absolute; right:34px; top:28px; width:210px; text-align:right; opacity:{{ opHud }}; transition:opacity .4s;">
+      <div style="font-size:11px; letter-spacing:.32em; color:#ff9a52;">OBJECTIVE</div>
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px; letter-spacing:.06em; color:#ded4c7; margin-top:4px; white-space:nowrap;">THE HOLLOW PROCESSION</div>
+      <div style="font-size:12px; line-height:1.35; color:#828892; margin-top:3px;">{{ objective }}</div>
+      <div style="font-size:11px; letter-spacing:.2em; color:#5f666f; margin-top:3px;">{{ objectiveSub }}</div>
+      <div style="width:150px; height:132px; margin:14px 0 0 auto; clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); background:rgba(160,140,110,.18); padding:1px; box-sizing:border-box;">
+        <div style="position:relative; width:100%; height:100%; clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); background:rgba(7,10,14,.72); overflow:hidden;">
+          <div style="position:absolute; inset:0; background-image:linear-gradient(rgba(122,142,166,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(122,142,166,.16) 1px, transparent 1px); background-size:20px 20px; transform:rotate(30deg) scale(1.6);"></div>
+          <div style="position:absolute; left:50%; top:50%; width:8px; height:8px; margin:-4px 0 0 -4px; transform:rotate(45deg); background:#e9f1f8; box-shadow:0 0 10px #cfe4f4;"></div>
+          <sc-for list="{{ blips }}" as="b" hint-placeholder-count="0">
+            <div style="position:absolute; left:{{ b.left }}%; top:{{ b.top }}%; width:{{ b.size }}px; height:{{ b.size }}px; margin:-3px 0 0 -3px; border-radius:50%; background:{{ b.color }}; box-shadow:0 0 9px {{ b.color }};"></div>
+          </sc-for>
+          <sc-for list="{{ lootBlips }}" as="b" hint-placeholder-count="0">
+            <div style="position:absolute; left:{{ b.left }}%; top:{{ b.top }}%; width:7px; height:7px; margin:-3px 0 0 -3px; transform:rotate(45deg); background:{{ b.color }}; box-shadow:0 0 10px {{ b.color }};"></div>
+          </sc-for>
+          <div style="position:absolute; inset:0; background:radial-gradient(closest-side, rgba(0,0,0,0) 42%, rgba(4,5,8,.9));"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="position:absolute; left:50%; bottom:0; width:760px; height:150px; transform:translateX(-50%); background:radial-gradient(70% 90% at 50% 100%, rgba(4,5,8,.62), rgba(4,5,8,0) 74%); opacity:{{ opHud }};"></div>
+    <div style="position:absolute; left:50%; bottom:26px; transform:translateX(-50%); display:flex; align-items:flex-end; gap:16px; opacity:{{ opHud }}; transition:opacity .4s;">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
+        <div style="width:44px; height:44px; border-radius:50%; background:radial-gradient(circle at 38% 30%, #c33e31, #450c0b 72%, #170404); box-shadow:inset 0 -7px 14px rgba(0,0,0,.75), 0 0 14px rgba(180,40,24,.35);"></div>
+        <div style="font-size:11px; letter-spacing:.18em; color:#767c85;">3/4</div>
+      </div>
+      <div style="display:flex; gap:9px;">
+        <sc-for list="{{ skills }}" as="k" hint-placeholder-count="5">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
+            <div style="position:relative; width:56px; height:56px; clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%); background:linear-gradient(180deg, rgba(150,132,104,.5), rgba(28,26,24,.6)); padding:1px; box-sizing:border-box;">
+              <div style="position:relative; width:100%; height:100%; clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%); background:radial-gradient(circle at 50% 42%, {{ k.tint }}, rgba(7,8,12,.94) 76%); display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                <div style="width:22px; height:22px; background:{{ k.mark }}; box-shadow:0 0 14px {{ k.mark }}; clip-path:{{ k.shape }};"></div>
+                <div style="position:absolute; inset:0; background:conic-gradient(from 0deg, rgba(3,4,7,.8) {{ k.cd }}%, rgba(0,0,0,0) 0);"></div>
+              </div>
+            </div>
+            <div style="font-size:11px; letter-spacing:.16em; color:#767c85;">{{ k.key }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
+        <div style="width:44px; height:44px; clip-path:polygon(50% 0,100% 26%,100% 74%,50% 100%,0 74%,0 26%); background:linear-gradient(180deg, rgba(140,160,186,.4), rgba(20,24,30,.6)); padding:1px; box-sizing:border-box;">
+          <div style="width:100%; height:100%; clip-path:polygon(50% 0,100% 26%,100% 74%,50% 100%,0 74%,0 26%); background:radial-gradient(circle at 50% 40%, rgba(120,190,225,.32), rgba(8,10,14,.94) 76%); display:flex; align-items:center; justify-content:center;">
+            <div style="width:16px; height:16px; transform:rotate(45deg); border:1px solid #9fd6ea; box-shadow:0 0 12px #6fc0dd;"></div>
+          </div>
+        </div>
+        <div style="font-size:11px; letter-spacing:.16em; color:#767c85;">SHIFT</div>
+      </div>
+    </div>
+
+    <div style="position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(8,10,14,.8); opacity:{{ opHud }};">
+      <div style="width:{{ xp }}%; height:100%; background:linear-gradient(90deg,#5c3612,#e59a4c); box-shadow:0 0 10px rgba(255,150,60,.5);"></div>
+    </div>
+
+    <div style="position:absolute; left:0; right:0; top:31%; text-align:center; opacity:{{ opBanner }}; transition:opacity .35s;">
+      <div style="font-family:'Cinzel',serif; font-weight:700; font-size:40px; letter-spacing:.16em; color:#eee4d8; text-shadow:0 4px 26px rgba(0,0,0,.95), 0 0 40px rgba(255,110,30,.28);">{{ banner }}</div>
+    </div>
+
+    <div style="position:absolute; left:50%; bottom:196px; transform:translateX(-50%); opacity:{{ opLoot }}; transition:opacity .4s; text-align:center; white-space:nowrap;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:16px; letter-spacing:.1em; color:{{ lootColor }}; text-shadow:0 2px 6px rgba(0,0,0,.95);">{{ lootLabel }}</div>
+      <div style="font-size:12px; letter-spacing:.2em; color:#8a8e96;">{{ lootSub }}</div>
+    </div>
+  </div>
+
+  <div style="position:absolute; left:0; right:0; bottom:0; display:flex; align-items:center; gap:26px; padding:10px 26px; background:linear-gradient(180deg, rgba(4,5,8,0), rgba(4,5,8,.9)); font-size:12px; letter-spacing:.18em; color:#5f666f; pointer-events:none;">
+    <div style="font-family:'Cinzel',serif; font-size:13px; letter-spacing:.36em; color:#ff9a52;">HELLWAKE</div>
+    <div style="white-space:nowrap;">WASD MOVE · LMB LIGHT · RMB HEAVY · SHIFT DODGE · Q EMBERBRAND · F BULWARK · E RUINFALL · R WAKE OF HELL</div>
+    <div style="margin-left:auto; white-space:nowrap; color:#767c85;">{{ stageLabel }}</div>
+  </div>
+
+  <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:#050609; opacity:{{ opLoading }}; transition:opacity .6s; pointer-events:none;">
+    <div style="text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:15px; letter-spacing:.5em; color:#ff9a52;">HELLWAKE</div>
+      <div style="font-size:12px; letter-spacing:.3em; color:#5f666f; margin-top:10px;">{{ loadingText }}</div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  state = { fit: 1, ready: false, error: '', hud: null, loot: null };
+
+  skillDefs = [
+    { key:'LMB', id:'LMB', tint:'rgba(190,58,38,.42)',  mark:'#ff8a58', shape:'polygon(50% 0,100% 50%,50% 100%,0 50%)' },
+    { key:'Q',   id:'Q',   tint:'rgba(255,118,38,.36)', mark:'#ffb45e', shape:'polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%)' },
+    { key:'F',   id:'W',   tint:'rgba(146,168,196,.26)',mark:'#cfe0ee', shape:'polygon(50% 0,100% 26%,100% 72%,50% 100%,0 72%,0 26%)' },
+    { key:'E',   id:'E',   tint:'rgba(116,78,196,.28)', mark:'#b79bf0', shape:'polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)' },
+    { key:'R',   id:'R',   tint:'rgba(255,78,28,.4)',   mark:'#ff6a2a', shape:'circle(50% at 50% 50%)' }
+  ];
+
+  async componentDidMount() {
+    this.onResize = () => this.setState({ fit: Math.min(window.innerWidth / 1920, window.innerHeight / 1080) });
+    window.addEventListener('resize', this.onResize);
+    this.onResize();
+    const host = document.getElementById('hw-stage');
+    try {
+      const mod = await import('./hellwake-game.js');
+      this.api = await mod.mount(host, {
+        onHud: (hud) => this.setState({ hud, ready: true }),
+        onEvent: (kind, data) => {
+          if (kind === 'loot') {
+            this.setState({ loot: data });
+            clearTimeout(this.lootT);
+            this.lootT = setTimeout(() => this.setState({ loot: null }), 3600);
+          }
+        }
+      });
+    } catch (err) {
+      console.error(err);
+      this.setState({ error: String(err && err.message || err) });
+    }
+  }
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.onResize);
+    clearTimeout(this.lootT);
+    if (this.api) this.api.dispose();
+  }
+
+  renderVals() {
+    const h = this.state.hud, loot = this.state.loot;
+    const cds = (h && h.cds) || {};
+    const rarityColor = { common:'#b9bec6', magic:'#6fb6e8', rare:'#f0d070', legendary:'#ff9a44' };
+    const blips = ((h && h.blips) || []).map(b => ({
+      left: (50 + b.x * 50).toFixed(1), top: (50 + b.y * 50).toFixed(1),
+      size: b.elite ? 9 : 6,
+      color: b.kind === 'wraith' ? '#63cdec' : b.elite ? '#ffb45e' : '#ff5a28'
+    })).filter(b => +b.left > 4 && +b.left < 96 && +b.top > 4 && +b.top < 96);
+    const lootBlips = ((h && h.loot) || []).map(b => ({
+      left: (50 + b.x * 50).toFixed(1), top: (50 + b.y * 50).toFixed(1), color: rarityColor[b.rarity] || '#b9bec6'
+    })).filter(b => +b.left > 4 && +b.left < 96 && +b.top > 4 && +b.top < 96);
+    const stageNames = { enter:'ENTERING PLAZA', wave1:'ENCOUNTER 1', advance:'ADVANCE', wave2:'ENCOUNTER 2',
+      intro:'ELITE INTRO', boss:'GRAVEWARDEN', reward:'LEGENDARY DROP', done:'SLICE COMPLETE' };
+    return {
+      fit: (this.state.fit || 1).toFixed(4),
+      opLoading: this.state.ready ? 0 : 1,
+      loadingText: this.state.error ? 'FAILED TO LOAD SCENE — ' + this.state.error : 'FORGING THE PLAZA…',
+      hp: h ? h.hp.toFixed(1) : 100, wrath: h ? h.wrath.toFixed(1) : 100,
+      xp: h ? h.xp.toFixed(1) : 0, level: h ? h.level : 42,
+      statuses: (h && h.statuses) || [],
+      skills: this.skillDefs.map(s => ({ ...s, cd: (cds[s.id] || 0).toFixed(0) })),
+      opHud: h && (h.cine || h.dead) ? 0.25 : 1,
+      opCine: h && h.cine ? 1 : 0,
+      opBoss: h && h.boss && h.boss.alive ? 1 : 0,
+      bossHp: h && h.boss ? h.boss.hp.toFixed(1) : 100,
+      bossAffixes: h && h.boss ? (h.boss.phase >= 2 ? 'SOULREND AURA · CINDER CHAINS · WARDED' : 'CINDER CHAINS · WARDED') : '',
+      objective: h ? h.objective.text : 'Enter the Vaunhold plaza',
+      objectiveSub: h ? (h.objective.alive ? h.objective.alive + ' HOSTILES · STEP ' + h.objective.index + ' / ' + h.objective.total
+        : 'STEP ' + h.objective.index + ' / ' + h.objective.total) : '',
+      banner: h ? h.banner : '', opBanner: h && h.banner ? 1 : 0,
+      blips, lootBlips,
+      stageLabel: h ? (stageNames[h.stage] || '') : '',
+      opLoot: loot ? 1 : 0,
+      lootLabel: loot ? loot.label : '', lootSub: loot ? loot.sub + ' · PICKED UP' : '',
+      lootColor: loot ? (rarityColor[loot.rarity] || '#b9bec6') : '#b9bec6'
+    };
+  }
+}
+</script>
+</body>
+</html>

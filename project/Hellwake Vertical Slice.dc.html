@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#06070a; }
+  @keyframes hw-ember { 0% { transform: translateY(0) scale(1); opacity:0 } 12% { opacity:.9 } 100% { transform: translateY(-620px) scale(.35); opacity:0 } }
+  @keyframes hw-flicker { 0%,100% { opacity:.55 } 43% { opacity:.78 } 61% { opacity:.42 } 78% { opacity:.7 } }
+  @keyframes hw-num { 0% { transform: translate(0,0) scale(.7); opacity:0 } 14% { transform: translate(0,-14px) scale(1.12); opacity:1 } 100% { transform: translate(0,-96px) scale(.92); opacity:0 } }
+  @keyframes hw-ring { 0% { transform: translate(-50%,-50%) scale(.25); opacity:.95 } 100% { transform: translate(-50%,-50%) scale(1.9); opacity:0 } }
+  @keyframes hw-beam { 0%,100% { opacity:.5 } 50% { opacity:.95 } }
+  @keyframes hw-drift { 0% { transform: translateX(-4%) } 100% { transform: translateX(4%) } }
+  @keyframes hw-pip { 0%,100% { opacity:.35 } 50% { opacity:1 } }
+</style>
+</helmet>
+
+<div style="width:1920px; background:#06070a; font-family:'Barlow Condensed',sans-serif; color:#dfe3e8; user-select:none;">
+
+  <div style="position:relative; width:1920px; height:1080px; overflow:hidden; background:#07080c; cursor:crosshair;" onClick="{{ onStrike }}">
+
+    <div style="position:absolute; inset:-40px; transform: translate({{ shakeX }}px, {{ shakeY }}px) scale({{ zoom }}); transform-origin:52% 62%; will-change:transform;">
+      <div style="position:absolute; inset:0; background-image:url('refs/b-5.png'); background-size:cover; background-position:50% 44%; filter:contrast(1.14) saturate(.86) brightness(.82); opacity:{{ opEncounter }}; transition:opacity .5s;"></div>
+      <div style="position:absolute; inset:0; background-image:url('refs/b-12.png'); background-size:cover; background-position:50% 50%; filter:contrast(1.1) saturate(.9) brightness(.78); opacity:{{ opElite }}; transition:opacity .5s;"></div>
+      <div style="position:absolute; inset:0; background-image:url('refs/b-1.png'); background-size:cover; background-position:50% 46%; filter:contrast(1.16) saturate(.72) brightness(.86); opacity:{{ opTraverse }}; transition:opacity .5s;"></div>
+
+      <div style="position:absolute; inset:0; background:radial-gradient(120% 90% at 50% 118%, rgba(255,122,40,.30), rgba(255,90,20,.06) 42%, rgba(0,0,0,0) 66%);"></div>
+      <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(120,140,164,.20), rgba(10,14,20,0) 34%, rgba(6,8,12,.42) 78%, rgba(4,5,8,.86));"></div>
+      <div style="position:absolute; inset:0; background:radial-gradient(78% 68% at 50% 52%, rgba(0,0,0,0) 42%, rgba(3,4,7,.62) 88%, rgba(2,3,5,.94));"></div>
+      <div style="position:absolute; left:-10%; right:-10%; top:-20%; height:120%; background:linear-gradient(104deg, rgba(0,0,0,0) 34%, rgba(198,214,232,.09) 44%, rgba(0,0,0,0) 52%), linear-gradient(96deg, rgba(0,0,0,0) 58%, rgba(255,176,96,.07) 66%, rgba(0,0,0,0) 73%); animation:hw-flicker 7s ease-in-out infinite;"></div>
+      <div style="position:absolute; left:-8%; right:-8%; bottom:0; height:46%; background:linear-gradient(180deg, rgba(146,160,178,0), rgba(150,166,186,.11) 60%, rgba(160,176,196,.16)); animation:hw-drift 26s ease-in-out infinite alternate; mix-blend-mode:screen;"></div>
+
+      <sc-for list="{{ embers }}" as="e" hint-placeholder-count="24">
+        <div style="position:absolute; left:{{ e.x }}%; bottom:-30px; width:{{ e.s }}px; height:{{ e.s }}px; border-radius:50%; background:{{ e.c }}; box-shadow:0 0 {{ e.g }}px {{ e.c }}; animation:hw-ember {{ e.d }}s linear {{ e.delay }}s infinite;"></div>
+      </sc-for>
+
+      <div style="position:absolute; left:52%; top:70%; width:520px; height:200px; transform:translate(-50%,-50%); opacity:{{ opStrike }}; transition:opacity .18s;">
+        <div style="position:absolute; left:50%; top:50%; width:460px; height:170px; border-radius:50%; border:3px solid rgba(255,150,60,.85); box-shadow:0 0 60px rgba(255,120,30,.55), inset 0 0 70px rgba(255,90,20,.4); animation:hw-ring .62s ease-out infinite;"></div>
+        <div style="position:absolute; left:50%; top:50%; width:300px; height:110px; border-radius:50%; border:2px solid rgba(255,224,170,.7); animation:hw-ring .62s ease-out .12s infinite;"></div>
+        <div style="position:absolute; left:50%; top:50%; width:640px; height:240px; transform:translate(-50%,-50%); border-radius:50%; background:radial-gradient(closest-side, rgba(255,140,50,.45), rgba(255,90,20,0) 72%); filter:blur(6px);"></div>
+      </div>
+
+      <div style="position:absolute; inset:0; background:radial-gradient(60% 50% at 52% 66%, rgba(255,160,70,.22), rgba(0,0,0,0) 70%); opacity:{{ opStrike }}; transition:opacity .2s; mix-blend-mode:screen;"></div>
+    </div>
+
+    <sc-for list="{{ numbers }}" as="n" hint-placeholder-count="0">
+      <div style="position:absolute; left:{{ n.x }}%; top:{{ n.y }}%; font-family:'Cinzel',serif; font-weight:900; font-size:{{ n.size }}px; color:{{ n.color }}; letter-spacing:.02em; text-shadow:0 2px 0 rgba(0,0,0,.85), 0 0 26px {{ n.glow }}; animation:hw-num 1.15s ease-out forwards;">{{ n.text }}</div>
+    </sc-for>
+
+    <div style="position:absolute; left:50%; top:15.5%; transform:translateX(-50%); width:1000px; text-align:center; opacity:{{ opElitePlate }}; transition:opacity .45s;">
+      <div style="font-family:'Cinzel',serif; font-size:15px; letter-spacing:.44em; color:#ff8a3c; text-shadow:0 0 18px rgba(255,110,30,.6); margin-bottom:6px;">ELITE · EMBERBOUND</div>
+      <div style="font-family:'Cinzel',serif; font-weight:700; font-size:36px; letter-spacing:.09em; white-space:nowrap; color:#f2e7dc; text-shadow:0 3px 12px rgba(0,0,0,.9);">GRAVEWARDEN OF THE NINTH SEAL</div>
+      <div style="margin:12px auto 0; width:600px; height:16px; background:linear-gradient(180deg,#12100f,#07070a); border:1px solid rgba(196,168,132,.5); box-shadow:0 0 0 1px rgba(0,0,0,.9), 0 6px 22px rgba(0,0,0,.8); clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%); padding:2px; box-sizing:border-box;">
+        <div style="width:{{ eliteHp }}%; height:100%; background:linear-gradient(180deg,#ff7a2a,#a51f14 62%,#6d0f0c); box-shadow:0 0 18px rgba(255,90,25,.75); transition:width .5s;"></div>
+      </div>
+      <div style="display:flex; justify-content:center; gap:8px; margin-top:9px;">
+        <sc-for list="{{ affixes }}" as="a" hint-placeholder-count="3">
+          <div style="font-size:14px; letter-spacing:.22em; text-transform:uppercase; color:#c8b79f; white-space:nowrap; padding:3px 10px; border:1px solid rgba(200,175,140,.34); background:rgba(10,10,14,.6);">{{ a }}</div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="position:absolute; left:{{ lootX }}%; top:{{ lootY }}%; transform:translate(-50%,-100%); opacity:{{ opLoot }}; transition:opacity .4s; text-align:center;">
+      <div style="width:120px; height:300px; margin:0 auto; background:linear-gradient(180deg, rgba(255,150,60,0), rgba(255,140,50,.34) 55%, rgba(255,196,120,.62)); filter:blur(3px); animation:hw-beam 2.2s ease-in-out infinite;"></div>
+      <div style="width:180px; height:44px; margin:-16px auto 0; border-radius:50%; background:radial-gradient(closest-side, rgba(255,190,110,.6), rgba(255,120,30,0) 72%);"></div>
+      <div style="position:absolute; left:50%; top:-58px; transform:translateX(-50%); white-space:nowrap; padding:8px 18px; background:linear-gradient(180deg, rgba(18,14,11,.94), rgba(8,7,9,.94)); border:1px solid rgba(255,146,58,.6); box-shadow:0 0 34px rgba(255,110,30,.35), inset 0 0 20px rgba(255,110,30,.1);">
+        <div style="font-family:'Cinzel',serif; font-weight:700; font-size:20px; letter-spacing:.1em; color:#ffab5e;">ASHFALL, THE LAST VOW</div>
+        <div style="font-size:15px; letter-spacing:.2em; color:#8d949e; text-transform:uppercase; margin-top:2px;">Ancient Greataxe · Item Power 812</div>
+      </div>
+    </div>
+
+    <div style="position:absolute; inset:0; pointer-events:none; opacity:{{ opCine }}; transition:opacity .5s;">
+      <div style="position:absolute; left:0; right:0; top:0; height:112px; background:#040507;"></div>
+      <div style="position:absolute; left:0; right:0; bottom:0; height:112px; background:#040507;"></div>
+      <div style="position:absolute; left:80px; bottom:150px; max-width:760px;">
+        <div style="font-size:15px; letter-spacing:.4em; color:#ff8a3c; margin-bottom:10px;">WAKE OF HELL · TIER III</div>
+        <div style="font-family:'Cinzel',serif; font-weight:900; font-size:54px; line-height:1.02; letter-spacing:.02em; color:#f4ece2; text-shadow:0 6px 30px rgba(0,0,0,.9);">THE NINTH SEAL BREAKS</div>
+      </div>
+    </div>
+
+    <div style="position:absolute; inset:0; pointer-events:none; opacity:{{ opHud }}; transition:opacity .45s;">
+
+      <div style="position:absolute; left:44px; top:40px; display:flex; align-items:flex-start; gap:18px;">
+        <div style="position:relative; width:132px; height:132px; clip-path:polygon(50% 0,100% 26%,100% 74%,50% 100%,0 74%,0 26%); background:linear-gradient(180deg,#2a2521,#0b0a0c); padding:4px; box-sizing:border-box; box-shadow:0 10px 30px rgba(0,0,0,.8);">
+          <div style="width:100%; height:100%; clip-path:polygon(50% 0,100% 26%,100% 74%,50% 100%,0 74%,0 26%); background-image:url('refs/a-5.png'); background-size:210%; background-position:48% 18%; filter:contrast(1.1) saturate(.9) brightness(.92);"></div>
+        </div>
+        <div style="padding-top:10px;">
+          <div style="display:flex; align-items:baseline; gap:12px;">
+            <div style="font-family:'Cinzel',serif; font-weight:700; font-size:22px; letter-spacing:.14em; color:#efe6da;">KAERVOSS</div>
+            <div style="font-size:16px; letter-spacing:.24em; color:#7d848e;">ASHSWORN · LV 42</div>
+          </div>
+          <div style="margin-top:8px; width:340px; height:26px; background:linear-gradient(180deg,#15100e,#08080b); border:1px solid rgba(190,160,124,.42); padding:3px; box-sizing:border-box; clip-path:polygon(0 0,100% 0,calc(100% - 12px) 100%,0 100%); position:relative;">
+            <div style="width:{{ hp }}%; height:100%; background:linear-gradient(180deg,#d4322a,#7c130f 60%,#4a0a0a); box-shadow:0 0 16px rgba(200,40,25,.6); transition:width .35s;"></div>
+            <div style="position:absolute; inset:3px; background:repeating-linear-gradient(90deg, rgba(0,0,0,.55) 0 1px, rgba(0,0,0,0) 1px 34px);"></div>
+          </div>
+          <div style="margin-top:6px; width:250px; height:14px; background:linear-gradient(180deg,#0f1216,#080a0d); border:1px solid rgba(140,160,186,.34); padding:2px; box-sizing:border-box; clip-path:polygon(0 0,100% 0,calc(100% - 8px) 100%,0 100%);">
+            <div style="width:{{ wrath }}%; height:100%; background:linear-gradient(180deg,#8fd0e6,#2d6b8c); box-shadow:0 0 14px rgba(110,190,225,.5); transition:width .35s;"></div>
+          </div>
+          <div style="display:flex; gap:8px; margin-top:12px;">
+            <sc-for list="{{ statuses }}" as="s" hint-placeholder-count="3">
+              <div style="display:flex; align-items:center; gap:7px; white-space:nowrap; padding:3px 9px 3px 4px; background:rgba(8,9,12,.72); border:1px solid rgba(120,130,146,.26);">
+                <div style="width:14px; height:14px; transform:rotate(45deg); background:{{ s.color }}; box-shadow:0 0 12px {{ s.color }};"></div>
+                <div style="font-size:14px; letter-spacing:.16em; text-transform:uppercase; color:#a9b0ba;">{{ s.name }}</div>
+                <div style="font-size:14px; color:#6d747e;">{{ s.time }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="position:absolute; right:44px; top:40px; width:300px; text-align:right;">
+        <div style="width:300px; height:300px; margin-left:auto; clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); background:linear-gradient(180deg,#241f1b,#0a0a0c); padding:3px; box-sizing:border-box; opacity:.96;">
+          <div style="position:relative; width:100%; height:100%; clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); background:#0a0d11; overflow:hidden;">
+            <div style="position:absolute; inset:0; background-image:linear-gradient(rgba(120,140,164,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(120,140,164,.16) 1px, transparent 1px); background-size:26px 26px; transform:rotate(28deg) scale(1.5);"></div>
+            <div style="position:absolute; left:18%; top:30%; width:44%; height:28%; background:rgba(150,170,196,.14); border:1px solid rgba(170,190,214,.3); transform:skewX(-14deg);"></div>
+            <div style="position:absolute; left:52%; top:16%; width:26%; height:36%; background:rgba(150,170,196,.1); border:1px solid rgba(170,190,214,.24); transform:skewX(-14deg);"></div>
+            <div style="position:absolute; left:24%; top:62%; width:38%; height:22%; background:rgba(150,170,196,.09); border:1px solid rgba(170,190,214,.2); transform:skewX(-14deg);"></div>
+            <div style="position:absolute; left:47%; top:52%; width:12px; height:12px; transform:rotate(45deg); background:#e8f1f8; box-shadow:0 0 16px #cfe6f5;"></div>
+            <div style="position:absolute; left:62%; top:38%; width:9px; height:9px; border-radius:50%; background:#ff5a28; box-shadow:0 0 14px #ff5a28; animation:hw-pip 1.6s infinite;"></div>
+            <div style="position:absolute; left:68%; top:44%; width:9px; height:9px; border-radius:50%; background:#ff5a28; box-shadow:0 0 14px #ff5a28; animation:hw-pip 1.6s .3s infinite;"></div>
+            <div style="position:absolute; left:57%; top:30%; width:9px; height:9px; border-radius:50%; background:#ff5a28; box-shadow:0 0 14px #ff5a28; animation:hw-pip 1.6s .7s infinite;"></div>
+            <div style="position:absolute; left:33%; top:74%; width:13px; height:13px; transform:rotate(45deg); background:#ffb45e; box-shadow:0 0 18px #ff9333;"></div>
+            <div style="position:absolute; inset:0; background:radial-gradient(closest-side, rgba(0,0,0,0) 45%, rgba(5,6,9,.85));"></div>
+          </div>
+        </div>
+        <div style="margin-top:18px;">
+          <div style="font-size:15px; letter-spacing:.36em; color:#ff8a3c;">ACTIVE OBJECTIVE</div>
+          <div style="font-family:'Cinzel',serif; font-weight:700; font-size:22px; letter-spacing:.06em; color:#efe6da; margin-top:7px;">THE HOLLOW PROCESSION</div>
+          <div style="font-size:17px; line-height:1.4; color:#9aa1ab; margin-top:6px; text-wrap:pretty;">Break the Ninth Seal beneath Vaunhold Cathedral. Wardens slain 2 / 3.</div>
+          <div style="margin-top:10px; margin-left:auto; width:220px; height:5px; background:rgba(120,130,146,.22);">
+            <div style="width:66%; height:100%; background:linear-gradient(90deg,#a5601f,#ffb45e);"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="position:absolute; left:50%; bottom:34px; transform:translateX(-50%); display:flex; align-items:flex-end; gap:26px;">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+          <div style="position:relative; width:76px; height:76px; border-radius:50%; background:radial-gradient(circle at 38% 30%, #d8483a, #4d0d0c 70%, #1a0505); border:2px solid rgba(196,168,132,.5); box-shadow:0 0 26px rgba(190,40,25,.45), inset 0 -10px 20px rgba(0,0,0,.7);"></div>
+          <div style="font-size:15px; letter-spacing:.2em; color:#8d949e;">3 / 4</div>
+        </div>
+
+        <div style="display:flex; gap:14px;">
+          <sc-for list="{{ skills }}" as="k" hint-placeholder-count="5">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+              <div style="position:relative; width:88px; height:88px; clip-path:polygon(28% 0,72% 0,100% 28%,100% 72%,72% 100%,28% 100%,0 72%,0 28%); background:linear-gradient(180deg,#2b2622,#0b0a0d); padding:3px; box-sizing:border-box; box-shadow:0 10px 26px rgba(0,0,0,.75);">
+                <div style="position:relative; width:100%; height:100%; clip-path:polygon(28% 0,72% 0,100% 28%,100% 72%,72% 100%,28% 100%,0 72%,0 28%); background:radial-gradient(circle at 50% 42%, {{ k.tint }}, #0a0a0e 78%); display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                  <div style="width:34px; height:34px; background:{{ k.mark }}; box-shadow:0 0 20px {{ k.mark }}; clip-path:{{ k.shape }};"></div>
+                  <div style="position:absolute; inset:0; background:conic-gradient(from 0deg, rgba(4,5,8,.78) {{ k.cd }}%, rgba(0,0,0,0) 0);"></div>
+                </div>
+              </div>
+              <div style="font-size:15px; letter-spacing:.18em; color:#8d949e;">{{ k.key }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+          <div style="position:relative; width:76px; height:76px; clip-path:polygon(50% 0,100% 26%,100% 74%,50% 100%,0 74%,0 26%); background:linear-gradient(180deg,#2b2622,#0b0a0d); padding:3px; box-sizing:border-box;">
+            <div style="width:100%; height:100%; clip-path:polygon(50% 0,100% 26%,100% 74%,50% 100%,0 74%,0 26%); background:radial-gradient(circle at 50% 40%, rgba(120,190,225,.4), #0a0c11 76%); display:flex; align-items:center; justify-content:center;">
+              <div style="width:26px; height:26px; transform:rotate(45deg); border:2px solid #9fd6ea; box-shadow:0 0 18px #6fc0dd;"></div>
+            </div>
+          </div>
+          <div style="font-size:15px; letter-spacing:.2em; color:#8d949e;">SHIFT</div>
+        </div>
+      </div>
+
+      <div style="position:absolute; left:0; right:0; bottom:0; height:6px; background:rgba(10,12,16,.85);">
+        <div style="width:{{ xp }}%; height:100%; background:linear-gradient(90deg,#7c4a17,#ffb45e); box-shadow:0 0 18px rgba(255,160,70,.6); transition:width .6s;"></div>
+      </div>
+      <div style="position:absolute; left:50%; bottom:-2px; transform:translateX(-50%); font-size:14px; letter-spacing:.3em; color:#6d747e;">{{ xp }}% TO LV 43</div>
+    </div>
+  </div>
+
+  <div style="display:flex; align-items:center; gap:2px; padding:16px 44px; background:#05060a; border-top:1px solid rgba(120,130,146,.16);">
+    <div style="font-family:'Cinzel',serif; font-size:16px; letter-spacing:.4em; color:#ff8a3c; margin-right:26px;">HELLWAKE · VERTICAL SLICE</div>
+    <sc-for list="{{ shots }}" as="s" hint-placeholder-count="3">
+      <div onClick="{{ s.go }}" style="cursor:pointer; padding:9px 20px; font-size:16px; letter-spacing:.22em; text-transform:uppercase; color:{{ s.color }}; background:{{ s.bg }}; border:1px solid {{ s.border }};" style-hover="color:#f2e7dc;">{{ s.label }}</div>
+    </sc-for>
+    <div style="margin-left:auto; font-size:16px; letter-spacing:.2em; color:#5f666f;">CLICK THE FRAME TO STRIKE · Q W E R ABILITIES · L LOOT</div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1920,&quot;height&quot;:1152}}">
+class Component extends DCLogic {
+  state = {
+    shot: 'encounter', hp: 61, wrath: 74, xp: 66, eliteHp: 68,
+    numbers: [], shake: {x:0,y:0}, zoom: 1.04, strike: 0, loot: 1, cdOffsets: {}
+  };
+
+  embers = Array.from({length: 34}, (_, i) => {
+    const warm = i % 4 !== 0;
+    return { x: +(3 + Math.random()*94).toFixed(2), s: +(2 + Math.random()*4).toFixed(1),
+      g: 8 + Math.round(Math.random()*14), d: +(7 + Math.random()*9).toFixed(1),
+      delay: +(Math.random()*12).toFixed(1),
+      c: warm ? 'rgba(255,168,84,.9)' : 'rgba(210,226,240,.55)' };
+  });
+
+  baseSkills = [
+    { key:'LMB', name:'Rend',          tint:'rgba(196,60,40,.5)',  mark:'#ff8a58', shape:'polygon(50% 0,100% 50%,50% 100%,0 50%)', cd:0,  dur:0.8 },
+    { key:'Q',   name:'Emberbrand',    tint:'rgba(255,120,40,.42)',mark:'#ffb45e', shape:'polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%)', cd:0, dur:6 },
+    { key:'W',   name:'Ashen Bulwark', tint:'rgba(150,170,196,.3)',mark:'#cfe0ee', shape:'polygon(50% 0,100% 26%,100% 72%,50% 100%,0 72%,0 26%)', cd:34, dur:12 },
+    { key:'E',   name:'Ruinfall',      tint:'rgba(120,80,200,.32)',mark:'#b79bf0', shape:'polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)', cd:0, dur:9 },
+    { key:'R',   name:'Wake of Hell',  tint:'rgba(255,80,30,.46)', mark:'#ff6a2a', shape:'circle(50% at 50% 50%)', cd:72, dur:40 }
+  ];
+
+  componentDidMount() {
+    this.onKey = (e) => {
+      const k = e.key.toLowerCase();
+      if (k === 'l') this.dropLoot();
+      else if (k === 'r') this.cinematic();
+      else if (['q','w','e'].includes(k)) this.strike(k);
+    };
+    window.addEventListener('keydown', this.onKey);
+    this.amb = setInterval(() => { if (this.state.shot !== 'traverse') this.spawn(1); }, 1400);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); clearInterval(this.amb); }
+
+  spawn(count) {
+    const add = Array.from({length: count}, () => {
+      const crit = Math.random() < 0.28;
+      return { id: Math.random(), x: +(38 + Math.random()*30).toFixed(1), y: +(48 + Math.random()*18).toFixed(1),
+        text: crit ? (2400 + Math.round(Math.random()*3800)).toLocaleString() + '!' : (420 + Math.round(Math.random()*900)).toLocaleString(),
+        size: crit ? 62 : 38, color: crit ? '#ffd29a' : '#e8dccb',
+        glow: crit ? 'rgba(255,140,40,.9)' : 'rgba(0,0,0,.7)' };
+    });
+    this.setState(s => ({ numbers: [...s.numbers, ...add].slice(-14) }));
+    setTimeout(() => this.setState(s => ({ numbers: s.numbers.filter(n => !add.includes(n)) })), 1200);
+  }
+
+  shakeBurst(mag, zoom) {
+    let t = 0;
+    const step = () => {
+      t += 1;
+      const decay = Math.max(0, 1 - t/14);
+      this.setState({ shake: { x: (Math.random()-.5)*mag*decay*2, y: (Math.random()-.5)*mag*decay*2 },
+        zoom: 1.04 + (zoom - 1.04) * decay });
+      if (decay > 0) requestAnimationFrame(step);
+      else this.setState({ shake:{x:0,y:0}, zoom: 1.04 });
+    };
+    requestAnimationFrame(step);
+  }
+
+  strike(k) {
+    this.spawn(4);
+    this.shakeBurst(k ? 12 : 7, k ? 1.09 : 1.06);
+    this.setState(s => ({ strike: 1, eliteHp: Math.max(6, s.eliteHp - 4 - Math.random()*6),
+      wrath: Math.max(4, s.wrath - 12), xp: Math.min(99, s.xp + 1) }));
+    setTimeout(() => this.setState({ strike: 0 }), 340);
+    setTimeout(() => this.setState(s => ({ wrath: Math.min(100, s.wrath + 16) })), 1200);
+  }
+
+  dropLoot() { this.setState({ loot: 1, shot: this.state.shot === 'traverse' ? 'encounter' : this.state.shot }); }
+
+  cinematic() {
+    this.setState({ shot: 'elite' });
+    this.spawn(5);
+    this.shakeBurst(20, 1.14);
+    setTimeout(() => this.setState({ shot: 'cinematic' }), 120);
+    setTimeout(() => this.setState({ shot: 'elite', loot: 1 }), 3400);
+  }
+
+  renderVals() {
+    const s = this.state, shot = s.shot;
+    const skills = this.baseSkills.map(k => ({ ...k }));
+    const shotDefs = [
+      { id:'encounter', label:'01 Encounter' },
+      { id:'elite',     label:'02 Elite' },
+      { id:'cinematic', label:'03 Cinematic' },
+      { id:'traverse',  label:'04 Traversal' }
+    ];
+    return {
+      embers: this.embers, skills, numbers: s.numbers,
+      hp: s.hp, wrath: s.wrath, xp: s.xp, eliteHp: Math.round(s.eliteHp),
+      shakeX: s.shake.x.toFixed(2), shakeY: s.shake.y.toFixed(2), zoom: s.zoom.toFixed(3),
+      opEncounter: shot === 'traverse' ? 0 : (shot === 'encounter' ? 1 : 0),
+      opElite: (shot === 'elite' || shot === 'cinematic') ? 1 : 0,
+      opTraverse: shot === 'traverse' ? 1 : 0,
+      opStrike: s.strike,
+      opHud: shot === 'cinematic' ? 0 : (shot === 'traverse' ? 0.55 : 1),
+      opCine: shot === 'cinematic' ? 1 : 0,
+      opElitePlate: (shot === 'elite') ? 1 : (shot === 'encounter' ? 0.9 : 0),
+      opLoot: s.loot && shot !== 'cinematic' ? 1 : 0,
+      lootX: shot === 'elite' ? 34 : 63, lootY: shot === 'elite' ? 88 : 84,
+      affixes: ['Soulrend Aura', 'Cinder Chains', 'Warded'],
+      statuses: [
+        { name:'Bleeding', time:'4s', color:'#c9382c' },
+        { name:'Ember Mark', time:'9s', color:'#ffab5e' },
+        { name:'Fortified', time:'12s', color:'#9fd6ea' }
+      ],
+      shots: shotDefs.map(d => ({
+        label: d.label, go: () => this.setState({ shot: d.id, loot: d.id === 'traverse' ? 0 : this.state.loot }),
+        color: shot === d.id ? '#ffab5e' : '#7d848e',
+        bg: shot === d.id ? 'rgba(255,120,40,.10)' : 'rgba(0,0,0,0)',
+        border: shot === d.id ? 'rgba(255,146,58,.5)' : 'rgba(120,130,146,.2)'
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>
