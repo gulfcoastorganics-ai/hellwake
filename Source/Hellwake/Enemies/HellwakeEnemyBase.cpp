@@ -116,7 +116,6 @@ void AHellwakeEnemyBase::Tick(float DeltaSeconds)
 void AHellwakeEnemyBase::UpdateAI(float DeltaSeconds, AActor* Target)
 {
 	const FVector ToTarget = Target->GetActorLocation() - GetActorLocation();
-	const float Distance = ToTarget.Size2D();
 
 	// Face the target directly, every frame.
 	const FRotator FaceRotation = FRotator(0.f, ToTarget.Rotation().Yaw, 0.f);
