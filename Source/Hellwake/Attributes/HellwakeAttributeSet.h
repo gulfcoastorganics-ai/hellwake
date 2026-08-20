@@ -71,6 +71,13 @@ public:
 	FGameplayAttributeData IncomingDamageMultiplier;
 	ATTRIBUTE_ACCESSORS(UHellwakeAttributeSet, IncomingDamageMultiplier)
 
+	// 0-100. Prototype: `P.xp = Math.min(100, P.xp + e.def.xp/12)` — a
+	// simplified single-bar XP meter for the vertical slice (no leveling
+	// logic; Level is a fixed cosmetic 42 in the prototype's own HUD).
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_XP, Category = "Hellwake|Attributes")
+	FGameplayAttributeData XP;
+	ATTRIBUTE_ACCESSORS(UHellwakeAttributeSet, XP)
+
 	// Meta attribute: never persisted, only used as the execution target for
 	// GameplayEffects that deal damage. PostGameplayEffectExecute converts
 	// any change here into a Health reduction and resets it to 0.
@@ -93,6 +100,8 @@ protected:
 	virtual void OnRep_WrathRegenRate(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
 	virtual void OnRep_IncomingDamageMultiplier(const FGameplayAttributeData& OldValue);
+	UFUNCTION()
+	virtual void OnRep_XP(const FGameplayAttributeData& OldValue);
 
 private:
 	// Cached from the Damage GameplayEffect's source/instigator so the death

@@ -17,6 +17,7 @@ UHellwakeAttributeSet::UHellwakeAttributeSet()
 	InitWrathRegenRate(4.5f);
 	InitIncomingDamageMultiplier(1.f);
 	InitDamage(0.f);
+	InitXP(0.f);
 }
 
 void UHellwakeAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -30,6 +31,7 @@ void UHellwakeAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME_CONDITION_NOTIFY(UHellwakeAttributeSet, MaxWrath, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UHellwakeAttributeSet, WrathRegenRate, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UHellwakeAttributeSet, IncomingDamageMultiplier, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UHellwakeAttributeSet, XP, COND_None, REPNOTIFY_Always);
 }
 
 void UHellwakeAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
@@ -43,6 +45,10 @@ void UHellwakeAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribu
 	else if (Attribute == GetWrathAttribute())
 	{
 		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxWrath());
+	}
+	else if (Attribute == GetXPAttribute())
+	{
+		NewValue = FMath::Clamp(NewValue, 0.f, 100.f);
 	}
 }
 
@@ -150,4 +156,8 @@ void UHellwakeAttributeSet::OnRep_WrathRegenRate(const FGameplayAttributeData& O
 void UHellwakeAttributeSet::OnRep_IncomingDamageMultiplier(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UHellwakeAttributeSet, IncomingDamageMultiplier, OldValue);
+}
+void UHellwakeAttributeSet::OnRep_XP(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UHellwakeAttributeSet, XP, OldValue);
 }
