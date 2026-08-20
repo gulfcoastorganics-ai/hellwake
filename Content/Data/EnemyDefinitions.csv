@@ -1,0 +1,5 @@
+---,DisplayName,RoleTag,MaxHealth,MoveSpeedCm,AttackDamage,AttackRangeCm,AttackCooldownSeconds,EngagementRingCm,LootDropChance,XPReward,bIsElite,PawnClass
+reaver,"Ashbound Reaver","Enemy.Role.Reaver",180,440,11,290,1.7,320,0.35,40,false,""
+wraith,"Cinder Wraith","Enemy.Role.Wraith",110,720,7,240,1.1,260,0.3,32,false,""
+acolyte,"Pyre Acolyte","Enemy.Role.Acolyte",130,340,14,1700,2.6,1300,0.45,46,false,""
+gravewarden,"Gravewarden of the Ninth Seal","Enemy.Role.Gravewarden",3200,400,26,540,2.4,500,1.0,900,true,""

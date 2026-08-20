@@ -63,6 +63,19 @@ void UHellwakeAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCa
 
 	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{
+		// Prototype: `if (P.iframe > 0 || P.dead) return;` at the top of
+		// damagePlayer() — i-frames (Dodge) and death both fully absorb
+		// incoming damage, checked before the Bulwark multiplier applies.
+		const UAbilitySystemComponent* TargetASCForGate = Data.Target.AbilityActorInfo.IsValid() ? Data.Target.AbilityActorInfo->AbilitySystemComponent.Get() : nullptr;
+		const bool bAbsorbed = TargetASCForGate &&
+			(TargetASCForGate->HasMatchingGameplayTag(HellwakeTags::State_IFrame) ||
+			 TargetASCForGate->HasMatchingGameplayTag(HellwakeTags::State_Dead));
+		if (bAbsorbed)
+		{
+			SetDamage(0.f);
+			return;
+		}
+
 		// Bulwark (F / Ashen Bulwark) and any other "incoming damage
 		// multiplier" effect scales the raw Damage meta-attribute here,
 		// mirroring `amount * (P.bulwark > 0 ? 0.45 : 1)` in damagePlayer().

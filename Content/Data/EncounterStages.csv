@@ -1,0 +1,9 @@
+---,StageId,ObjectiveText,StageLabel,BannerText,SpawnRowNames,SpawnLocations
+enter,Enter,"Enter the Vaunhold plaza","ENTERING PLAZA","ENTER THE VAUNHOLD PLAZA","",""
+wave1,Wave1,"Break the first procession","ENCOUNTER 1","BREAK THE FIRST PROCESSION","reaver,reaver,wraith,acolyte","(X=-500,Y=600,Z=0),(X=500,Y=700,Z=0),(X=0,Y=200,Z=0),(X=-1200,Y=-200,Z=0)"
+advance,Advance,"Advance to the cathedral steps","ADVANCE","ADVANCE TO THE CATHEDRAL STEPS","",""
+wave2,Wave2,"Clear the ritual guard","ENCOUNTER 2","CLEAR THE RITUAL GUARD","reaver,reaver,wraith,wraith,acolyte","(X=-800,Y=-800,Z=0),(X=900,Y=-700,Z=0),(X=-300,Y=-1200,Z=0),(X=600,Y=-1300,Z=0),(X=1300,Y=-1400,Z=0)"
+intro,Intro,"The Gravewarden wakes","ELITE INTRO","THE GRAVEWARDEN WAKES","gravewarden","(X=0,Y=-2200,Z=0)"
+boss,Boss,"Slay the Gravewarden","GRAVEWARDEN","SLAY THE GRAVEWARDEN","",""
+reward,Reward,"Claim the Last Vow","LEGENDARY DROP","THE NINTH SEAL BREAKS","",""
+done,Done,"Vertical slice complete","SLICE COMPLETE","VERTICAL SLICE COMPLETE","",""

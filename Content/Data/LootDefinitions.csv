@@ -1,0 +1,5 @@
+---,ItemName,SubLabel,Color,RollThreshold
+common,"Ashen Fragment","COMMON",(R=0.725,G=0.745,B=0.775,A=1.0),0.0
+magic,"Warded Sigil","MAGIC",(R=0.435,G=0.714,B=0.910,A=1.0),0.6
+rare,"Cinderforged Plate","RARE",(R=0.941,G=0.816,B=0.439,A=1.0),0.93
+legendary,"ASHFALL, THE LAST VOW","ANCIENT GREATAXE - 812",(R=1.0,G=0.604,B=0.267,A=1.0),1.0
