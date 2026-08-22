@@ -1,5 +1,6 @@
 #include "Abilities/HellwakeAbility_WakeOfHell.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystemInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Actor.h"
 #include "HellwakeGameplayTags.h"
@@ -48,6 +49,7 @@ void UHellwakeAbility_WakeOfHell::ActivateAbility(const FGameplayAbilitySpecHand
 		{
 			continue;
 		}
+
 		IAbilitySystemInterface* TargetASI = Cast<IAbilitySystemInterface>(Target);
 		UAbilitySystemComponent* TargetASC = TargetASI ? TargetASI->GetAbilitySystemComponent() : nullptr;
 		if (!TargetASC)
@@ -60,6 +62,7 @@ void UHellwakeAbility_WakeOfHell::ActivateAbility(const FGameplayAbilitySpecHand
 		{
 			continue;
 		}
+
 		const float BaseFalloffDamage = FMath::Max(0.f, MaxDamageAtCenter - FalloffPerMeter * DistanceMeters);
 		const float Damage = BaseFalloffDamage * FMath::FRandRange(0.9f, 1.1f);
 		if (Damage <= 0.f || !DamageEffectClass)
