@@ -1,5 +1,7 @@
 #include "Enemies/HellwakeEnemyBase.h"
+#include "Enemies/HellwakeEnemyAIController.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystemInterface.h"
 #include "Attributes/HellwakeAttributeSet.h"
 #include "Combat/HellwakeVitalityComponent.h"
 #include "Loot/HellwakeLootDropComponent.h"
@@ -8,6 +10,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/DataTable.h"
 #include "Kismet/GameplayStatics.h"
+#include "TimerManager.h"
 #include "HellwakeGameplayTags.h"
 #include "Hellwake.h"
 
@@ -23,9 +26,9 @@ AHellwakeEnemyBase::AHellwakeEnemyBase()
 	VitalityComponent = CreateDefaultSubobject<UHellwakeVitalityComponent>(TEXT("VitalityComponent"));
 	LootDropComponent = CreateDefaultSubobject<UHellwakeLootDropComponent>(TEXT("LootDropComponent"));
 
-	// Enemies always face their target directly, unlike the player (whose
-	// facing is movement-driven). Prototype: `e.obj.rotation.y =
-	// atan2(d.x, d.z)` every frame, unconditionally.
+	AIControllerClass = AHellwakeEnemyAIController::StaticClass();
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->bUseControllerDesiredRotation = false;
@@ -116,15 +119,9 @@ void AHellwakeEnemyBase::Tick(float DeltaSeconds)
 void AHellwakeEnemyBase::UpdateAI(float DeltaSeconds, AActor* Target)
 {
 	const FVector ToTarget = Target->GetActorLocation() - GetActorLocation();
-
-	// Face the target directly, every frame.
 	const FRotator FaceRotation = FRotator(0.f, ToTarget.Rotation().Yaw, 0.f);
 	SetActorRotation(FaceRotation);
 
-	// Ring-hold positioning: try to sit at EngagementRingCm from the
-	// target, at this enemy's slot angle around it. Prototype:
-	// `want = hero.position + (sin(slot), cos(slot)) * def.ring`.
-	// Cinder Wraiths additionally orbit: `slot + anim*0.5`.
 	const float EffectiveSlot = RoleTag == HellwakeTags::Enemy_Role_Wraith ? RingSlotRadians + AnimTime * 0.5f : RingSlotRadians;
 	const FVector WantLocation = Target->GetActorLocation() + FVector(FMath::Sin(EffectiveSlot), FMath::Cos(EffectiveSlot), 0.f) * EngagementRingCm;
 	const FVector ToWant = WantLocation - GetActorLocation();
@@ -152,11 +149,6 @@ void AHellwakeEnemyBase::TryAttack(float DeltaSeconds, AActor* Target)
 
 	AttackCooldownRemaining = AttackCooldownSeconds;
 
-	// Ranged (Pyre Acolyte) telegraphs at the target's position at cast
-	// time, matching the prototype's `telegraph(px, pz, 2.6, 0.85, ...)`.
-	// The base implementation here resolves it after a short delay via
-	// timer rather than a full telegraph-VFX task; see
-	// project-bible/enemies.md for the in-editor Niagara telegraph spec.
 	if (RoleTag == HellwakeTags::Enemy_Role_Acolyte)
 	{
 		TWeakObjectPtr<AActor> WeakTarget = Target;
@@ -167,7 +159,7 @@ void AHellwakeEnemyBase::TryAttack(float DeltaSeconds, AActor* Target)
 			if (WeakSelf.IsValid() && WeakTarget.IsValid() && !WeakSelf->IsDead())
 			{
 				const float Distance = FVector::Dist2D(WeakSelf->GetActorLocation(), WeakTarget->GetActorLocation());
-				if (Distance < WeakSelf->AttackRangeCm + 60.f + 60.f)
+				if (Distance < WeakSelf->AttackRangeCm + 120.f)
 				{
 					WeakSelf->DealDamageTo(WeakTarget.Get(), WeakSelf->AttackDamage);
 				}
@@ -176,7 +168,6 @@ void AHellwakeEnemyBase::TryAttack(float DeltaSeconds, AActor* Target)
 	}
 	else
 	{
-		// Melee: prototype delays contact by 0.3s to match the swing anim.
 		TWeakObjectPtr<AActor> WeakTarget = Target;
 		TWeakObjectPtr<AHellwakeEnemyBase> WeakSelf = this;
 		FTimerHandle SwingHandle;
@@ -200,6 +191,7 @@ void AHellwakeEnemyBase::DealDamageTo(AActor* Target, float Damage, bool bCrit)
 	{
 		return;
 	}
+
 	IAbilitySystemInterface* TargetASI = Cast<IAbilitySystemInterface>(Target);
 	UAbilitySystemComponent* TargetASC = TargetASI ? TargetASI->GetAbilitySystemComponent() : nullptr;
 	if (!TargetASC)
@@ -241,8 +233,6 @@ void AHellwakeEnemyBase::HandleDeath()
 		LootDropComponent->RollAndMaybeDrop(LootDropChance, GetActorLocation());
 	}
 
-	// Prototype: `P.xp = Math.min(100, P.xp + e.def.xp/12)` on every kill,
-	// unconditional of who/what landed the killing blow (single-player slice).
 	if (APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0))
 	{
 		if (IAbilitySystemInterface* PlayerASI = Cast<IAbilitySystemInterface>(PlayerPawn))
@@ -256,8 +246,6 @@ void AHellwakeEnemyBase::HandleDeath()
 			}
 		}
 	}
-
-	// TODO(VFX): burst + shockwave at death location, scaled for elites.
 
 	SetActorEnableCollision(false);
 }
