@@ -25,7 +25,7 @@ bool FHellwakeNativeTagsSmokeTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("Ruinfall tag registered"), HellwakeTags::Ability_Ruinfall.IsValid());
 	TestTrue(TEXT("Wake of Hell tag registered"), HellwakeTags::Ability_WakeOfHell.IsValid());
 	TestTrue(TEXT("Death tag registered"), HellwakeTags::Event_Death.IsValid());
-	TestTrue(TEXT("Damage SetByCaller tag registered from config"), FGameplayTag::RequestGameplayTag(TEXT("Data.Damage"), false).IsValid());
+	TestTrue(TEXT("Damage SetByCaller tag registered from config"), FGameplayTag::RequestGameplayTag(FName(TEXT("Data.Damage")), false).IsValid());
 	return true;
 }
 
