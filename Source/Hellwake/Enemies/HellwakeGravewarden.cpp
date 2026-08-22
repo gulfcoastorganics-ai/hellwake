@@ -1,6 +1,7 @@
 #include "Enemies/HellwakeGravewarden.h"
 #include "Attributes/HellwakeAttributeSet.h"
 #include "AbilitySystemComponent.h"
+#include "Data/HellwakeEnemyDefinition.h"
 #include "Loot/HellwakeLootPickup.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -8,9 +9,47 @@
 #include "HellwakeGameplayTags.h"
 #include "Hellwake.h"
 
+namespace
+{
+	FHellwakeEnemyDefinition MakeBossAddDefinition(const FName RowName)
+	{
+		FHellwakeEnemyDefinition Def;
+		if (RowName == TEXT("wraith"))
+		{
+			Def.DisplayName = FText::FromString(TEXT("Cinder Wraith"));
+			Def.RoleTag = HellwakeTags::Enemy_Role_Wraith;
+			Def.MaxHealth = 110.f;
+			Def.MoveSpeedCm = 720.f;
+			Def.AttackDamage = 7.f;
+			Def.AttackRangeCm = 240.f;
+			Def.AttackCooldownSeconds = 1.1f;
+			Def.EngagementRingCm = 260.f;
+			Def.LootDropChance = 0.30f;
+			Def.XPReward = 32.f;
+		}
+		else
+		{
+			Def.DisplayName = FText::FromString(TEXT("Ashbound Reaver"));
+			Def.RoleTag = HellwakeTags::Enemy_Role_Reaver;
+			Def.MaxHealth = 180.f;
+			Def.MoveSpeedCm = 440.f;
+			Def.AttackDamage = 11.f;
+			Def.AttackRangeCm = 290.f;
+			Def.AttackCooldownSeconds = 1.7f;
+			Def.EngagementRingCm = 320.f;
+			Def.LootDropChance = 0.35f;
+			Def.XPReward = 40.f;
+		}
+		return Def;
+	}
+}
+
 AHellwakeGravewarden::AHellwakeGravewarden()
 {
 	bIsElite = true;
+	ReaverClass = AHellwakeEnemyBase::StaticClass();
+	WraithClass = AHellwakeEnemyBase::StaticClass();
+	LegendaryLootPickupClass = AHellwakeLootPickup::StaticClass();
 }
 
 void AHellwakeGravewarden::UpdateAI(float DeltaSeconds, AActor* Target)
@@ -65,27 +104,41 @@ void AHellwakeGravewarden::EnterPhase(EHellwakeGravewardenPhase NewPhase)
 
 	if (NewPhase == EHellwakeGravewardenPhase::Phase2)
 	{
-		SpawnAdds(ReaverClass, 3, 500.f);
+		SpawnAdds(ReaverClass, TEXT("reaver"), 3, 500.f);
 	}
 	else if (NewPhase == EHellwakeGravewardenPhase::Phase3)
 	{
-		SpawnAdds(WraithClass, 2, 600.f);
+		SpawnAdds(WraithClass, TEXT("wraith"), 2, 600.f);
 	}
 }
 
-void AHellwakeGravewarden::SpawnAdds(TSubclassOf<AHellwakeEnemyBase> EnemyClass, int32 Count, float SideOffsetCm)
+void AHellwakeGravewarden::SpawnAdds(TSubclassOf<AHellwakeEnemyBase> EnemyClass, FName DefinitionRowName, int32 Count, float SideOffsetCm)
 {
 	if (!EnemyClass || !GetWorld())
 	{
 		return;
 	}
+
+	FHellwakeEnemyDefinition FallbackDef = MakeBossAddDefinition(DefinitionRowName);
+	const FHellwakeEnemyDefinition* Definition = &FallbackDef;
+	if (EnemyDefinitionTable)
+	{
+		if (const FHellwakeEnemyDefinition* DataRow = EnemyDefinitionTable->FindRow<FHellwakeEnemyDefinition>(DefinitionRowName, TEXT("Gravewarden::SpawnAdds")))
+		{
+			Definition = DataRow;
+		}
+	}
+
 	for (int32 i = 0; i < Count; ++i)
 	{
 		const float OffsetX = (i - (Count - 1) / 2.f) * SideOffsetCm;
-		const FVector SpawnLocation = GetActorLocation() + FVector(OffsetX, 500.f, 0.f);
+		const FVector SpawnLocation = GetActorLocation() + FVector(OffsetX, 500.f, 80.f);
 		FActorSpawnParameters Params;
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-		GetWorld()->SpawnActor<AHellwakeEnemyBase>(EnemyClass, SpawnLocation, FRotator::ZeroRotator, Params);
+		if (AHellwakeEnemyBase* Add = GetWorld()->SpawnActor<AHellwakeEnemyBase>(EnemyClass, SpawnLocation, FRotator::ZeroRotator, Params))
+		{
+			Add->InitializeFromDefinition(*Definition, DefinitionRowName);
+		}
 	}
 }
 
@@ -154,13 +207,21 @@ void AHellwakeGravewarden::ChooseAndBeginAttack(AActor* Target)
 
 void AHellwakeGravewarden::HandleDeath()
 {
+	if (bIsDead)
+	{
+		return;
+	}
+
 	Super::HandleDeath();
 
 	if (LegendaryLootPickupClass && GetWorld())
 	{
-		const FVector DropLocation = GetActorLocation() + GetActorForwardVector() * 300.f;
+		const FVector DropLocation = GetActorLocation() + GetActorForwardVector() * 300.f + FVector(0.f, 0.f, 40.f);
 		FActorSpawnParameters Params;
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-		GetWorld()->SpawnActor<AHellwakeLootPickup>(LegendaryLootPickupClass, DropLocation, FRotator::ZeroRotator, Params);
+		if (AHellwakeLootPickup* Pickup = GetWorld()->SpawnActor<AHellwakeLootPickup>(LegendaryLootPickupClass, DropLocation, FRotator::ZeroRotator, Params))
+		{
+			Pickup->ConfigurePickup(TEXT("legendary"));
+		}
 	}
 }
