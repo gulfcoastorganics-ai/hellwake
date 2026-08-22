@@ -4,6 +4,7 @@
 #include "AbilitySystemInterface.h"
 #include "Attributes/HellwakeAttributeSet.h"
 #include "Combat/HellwakeVitalityComponent.h"
+#include "GameplayEffects/HellwakeGE_Damage.h"
 #include "Loot/HellwakeLootDropComponent.h"
 #include "Data/HellwakeEnemyDefinition.h"
 #include "AbilitySystemBlueprintLibrary.h"
@@ -25,6 +26,7 @@ AHellwakeEnemyBase::AHellwakeEnemyBase()
 	AttributeSet = CreateDefaultSubobject<UHellwakeAttributeSet>(TEXT("AttributeSet"));
 	VitalityComponent = CreateDefaultSubobject<UHellwakeVitalityComponent>(TEXT("VitalityComponent"));
 	LootDropComponent = CreateDefaultSubobject<UHellwakeLootDropComponent>(TEXT("LootDropComponent"));
+	DamageEffectClass = UHellwakeGE_Damage::StaticClass();
 
 	AIControllerClass = AHellwakeEnemyAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
