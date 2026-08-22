@@ -1,6 +1,7 @@
 #include "Abilities/HellwakeAbility_Ruinfall.h"
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "GameplayEffects/HellwakeGE_Damage.h"
+#include "GameplayEffects/HellwakeGE_AbilityRuntime.h"
 #include "GameFramework/Actor.h"
 #include "HellwakeGameplayTags.h"
 
@@ -8,6 +9,8 @@ UHellwakeAbility_Ruinfall::UHellwakeAbility_Ruinfall()
 {
 	AbilityTags.AddTag(HellwakeTags::Ability_Ruinfall);
 	DamageEffectClass = UHellwakeGE_Damage::StaticClass();
+	CooldownGameplayEffectClass = UHellwakeGE_Cooldown_Ruinfall::StaticClass();
+	CostGameplayEffectClass = UHellwakeGE_Cost_Ruinfall::StaticClass();
 }
 
 void UHellwakeAbility_Ruinfall::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
