@@ -1,12 +1,15 @@
 #include "Abilities/HellwakeAbility_Bulwark.h"
 #include "AbilitySystemComponent.h"
 #include "GameplayEffects/HellwakeGE_Bulwark.h"
+#include "GameplayEffects/HellwakeGE_AbilityRuntime.h"
 #include "HellwakeGameplayTags.h"
 
 UHellwakeAbility_Bulwark::UHellwakeAbility_Bulwark()
 {
 	AbilityTags.AddTag(HellwakeTags::Ability_Bulwark);
 	BulwarkEffectClass = UHellwakeGE_Bulwark::StaticClass();
+	CooldownGameplayEffectClass = UHellwakeGE_Cooldown_Bulwark::StaticClass();
+	CostGameplayEffectClass = UHellwakeGE_Cost_Bulwark::StaticClass();
 }
 
 void UHellwakeAbility_Bulwark::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
