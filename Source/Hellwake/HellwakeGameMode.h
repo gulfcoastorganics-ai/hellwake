@@ -1,10 +1,6 @@
-// Vertical-slice GameMode: starts the encounter subsystem, ticks it with
-// the player's location, and spawns wave enemies when a stage's row lists
-// any (see DT_EncounterStages' SpawnRowNames/SpawnLocations). This is the
-// "gameplay framework" glue the prototype didn't need (it was one JS file
-// with a single tick() function) — split out here so encounter pacing
-// (UHellwakeEncounterSubsystem), enemy behavior (AHellwakeEnemyBase), and
-// spawn orchestration (this class) stay independently testable.
+// Vertical-slice GameMode: owns encounter orchestration and an asset-free
+// fallback arena so a clean native checkout is playable before any .umap,
+// DataTable, Blueprint, or UMG assets have been authored in-editor.
 #pragma once
 
 #include "CoreMinimal.h"
@@ -14,7 +10,7 @@
 
 class UHellwakeEncounterSubsystem;
 class UDataTable;
-class AHellwakeEnemyBase;
+class UStaticMesh;
 
 UCLASS()
 class HELLWAKE_API AHellwakeGameMode : public AGameModeBase
@@ -31,6 +27,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hellwake|Data")
 	TObjectPtr<UDataTable> EnemyDefinitionTable;
 
+	// Keep enabled until L_Hellwake_VerticalSlice exists. It creates a floor,
+	// boundary walls, and basic lighting using Engine content only.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hellwake|Fallback")
+	bool bBuildNativeFallbackArena = true;
+
+	UPROPERTY()
+	TObjectPtr<UStaticMesh> ArenaCubeMesh;
+
 	UFUNCTION()
 	void HandleStageChanged(EHellwakeEncounterStage NewStage);
 
@@ -38,5 +42,6 @@ private:
 	UPROPERTY()
 	TObjectPtr<UHellwakeEncounterSubsystem> Encounter;
 
+	void BuildNativeFallbackArena();
 	void SpawnEnemiesForStage(EHellwakeEncounterStage Stage);
 };
