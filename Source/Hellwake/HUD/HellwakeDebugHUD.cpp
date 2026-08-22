@@ -2,6 +2,7 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "Attributes/HellwakeAttributeSet.h"
+#include "Enemies/HellwakeGravewarden.h"
 #include "HellwakeEncounterSubsystem.h"
 #include "Engine/Canvas.h"
 #include "Engine/Engine.h"
@@ -63,6 +64,7 @@ void AHellwakeDebugHUD::DrawHUD()
 	FText Objective = FText::FromString(TEXT("Enter the Vaunhold plaza"));
 	FText StageLabel = FText::FromString(TEXT("ENTERING PLAZA"));
 	int32 AliveHostiles = 0;
+	AHellwakeGravewarden* Gravewarden = nullptr;
 	if (UWorld* World = GetWorld())
 	{
 		if (UHellwakeEncounterSubsystem* Encounter = World->GetSubsystem<UHellwakeEncounterSubsystem>())
@@ -70,6 +72,7 @@ void AHellwakeDebugHUD::DrawHUD()
 			Objective = Encounter->GetObjectiveText();
 			StageLabel = Encounter->GetStageLabel();
 			AliveHostiles = Encounter->GetAliveHostileCount();
+			Gravewarden = Encounter->GetGravewarden();
 		}
 	}
 
@@ -80,6 +83,22 @@ void AHellwakeDebugHUD::DrawHUD()
 		GEngine ? GEngine->GetSmallFont() : nullptr, 1.f, false);
 	DrawText(FString::Printf(TEXT("HOSTILES: %d"), AliveHostiles), FLinearColor::White, RightX, Top + 52.f,
 		GEngine ? GEngine->GetSmallFont() : nullptr, 0.95f, false);
+
+	if (IsValid(Gravewarden) && !Gravewarden->IsDead())
+	{
+		if (UAbilitySystemComponent* BossASC = Gravewarden->GetAbilitySystemComponent())
+		{
+			if (const UHellwakeAttributeSet* BossAttr = BossASC->GetSet<UHellwakeAttributeSet>())
+			{
+				const float BossWidth = FMath::Min(560.f, Canvas->SizeX * 0.42f);
+				const float BossX = (Canvas->SizeX - BossWidth) * 0.5f;
+				DrawText(TEXT("GRAVEWARDEN OF THE NINTH SEAL"), FLinearColor(0.95f, 0.72f, 0.36f, 1.f),
+					BossX + 70.f, 28.f, GEngine ? GEngine->GetMediumFont() : nullptr, 0.95f, false);
+				DrawMeter(TEXT("BOSS"), BossAttr->GetHealth(), BossAttr->GetMaxHealth(), BossX, 58.f, BossWidth,
+					FLinearColor(0.42f, 0.03f, 0.025f, 1.f));
+			}
+		}
+	}
 
 	const FString Controls = TEXT("WASD Move   LMB Light   RMB Heavy   Shift/Space Dodge   Q Emberbrand   F Bulwark   E Ruinfall   R Wake of Hell");
 	DrawText(Controls, FLinearColor(0.8f, 0.8f, 0.82f, 1.f), 34.f, Canvas->SizeY - 44.f,
