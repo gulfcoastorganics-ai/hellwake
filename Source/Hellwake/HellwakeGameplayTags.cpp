@@ -10,6 +10,14 @@ namespace HellwakeTags
 	UE_DEFINE_GAMEPLAY_TAG(Ability_Ruinfall, "Ability.Ruinfall");
 	UE_DEFINE_GAMEPLAY_TAG(Ability_WakeOfHell, "Ability.WakeOfHell");
 
+	UE_DEFINE_GAMEPLAY_TAG(Cooldown_LightAttack, "Cooldown.LightAttack");
+	UE_DEFINE_GAMEPLAY_TAG(Cooldown_HeavyAttack, "Cooldown.HeavyAttack");
+	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Dodge, "Cooldown.Dodge");
+	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Emberbrand, "Cooldown.Emberbrand");
+	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Bulwark, "Cooldown.Bulwark");
+	UE_DEFINE_GAMEPLAY_TAG(Cooldown_Ruinfall, "Cooldown.Ruinfall");
+	UE_DEFINE_GAMEPLAY_TAG(Cooldown_WakeOfHell, "Cooldown.WakeOfHell");
+
 	UE_DEFINE_GAMEPLAY_TAG(Boss_GravewardenPhase_SweepingAxe, "Boss.Gravewarden.Attack.SweepingAxe");
 	UE_DEFINE_GAMEPLAY_TAG(Boss_GravewardenPhase_GroundSlam, "Boss.Gravewarden.Attack.GroundSlam");
 	UE_DEFINE_GAMEPLAY_TAG(Boss_GravewardenPhase_AreaDenial, "Boss.Gravewarden.Attack.AreaDenial");
