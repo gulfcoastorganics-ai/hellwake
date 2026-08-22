@@ -16,6 +16,7 @@
 #include "Camera/HellwakeCameraDirector.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Components/InputComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -63,8 +64,6 @@ AHellwakeCharacter::AHellwakeCharacter()
 
 	CameraDirector = CreateDefaultSubobject<UHellwakeCameraDirector>(TEXT("CameraDirector"));
 
-	// Native defaults make the C++ pawn playable enough for first-build/PIE
-	// validation without requiring Blueprint subclasses just to grant GAS.
 	DefaultAttributesEffectClass = UHellwakeGE_PlayerDefaults::StaticClass();
 	PassiveRegenEffectClass = UHellwakeGE_PassiveRegen::StaticClass();
 	StartingAbilities = {
@@ -151,31 +150,43 @@ void AHellwakeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(PlayerInputComponent);
-	if (!EIC)
-	{
-		UE_LOG(LogHellwake, Error, TEXT("HellwakeCharacter expects an Enhanced Input component."));
-		return;
-	}
-
-	if (MoveAction)
+	if (EIC && MoveAction)
 	{
 		EIC->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHellwakeCharacter::HandleMove);
 	}
-
-	auto BindAbility = [this, EIC](UInputAction* Action, FGameplayTag Tag)
+	else
 	{
-		if (Action)
+		// Terminal/native first-build fallback: these mappings live in
+		// DefaultInput.ini, so the pawn is controllable before binary Enhanced
+		// Input assets are authored in-editor.
+		PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AHellwakeCharacter::HandleMoveForward);
+		PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AHellwakeCharacter::HandleMoveRight);
+	}
+
+	auto BindEnhancedAbility = [this, EIC](UInputAction* Action, FGameplayTag Tag)
+	{
+		if (EIC && Action)
 		{
 			EIC->BindAction(Action, ETriggerEvent::Started, this, &AHellwakeCharacter::ActivateAbilityByTag, Tag);
+			return true;
 		}
+		return false;
 	};
-	BindAbility(LightAttackAction, HellwakeTags::Ability_Attack_Light);
-	BindAbility(HeavyAttackAction, HellwakeTags::Ability_Attack_Heavy);
-	BindAbility(DodgeAction, HellwakeTags::Ability_Dodge);
-	BindAbility(EmberbrandAction, HellwakeTags::Ability_Emberbrand);
-	BindAbility(BulwarkAction, HellwakeTags::Ability_Bulwark);
-	BindAbility(RuinfallAction, HellwakeTags::Ability_Ruinfall);
-	BindAbility(WakeOfHellAction, HellwakeTags::Ability_WakeOfHell);
+
+	if (!BindEnhancedAbility(LightAttackAction, HellwakeTags::Ability_Attack_Light))
+		PlayerInputComponent->BindAction(TEXT("LightAttack"), IE_Pressed, this, &AHellwakeCharacter::ActivateLightAttack);
+	if (!BindEnhancedAbility(HeavyAttackAction, HellwakeTags::Ability_Attack_Heavy))
+		PlayerInputComponent->BindAction(TEXT("HeavyAttack"), IE_Pressed, this, &AHellwakeCharacter::ActivateHeavyAttack);
+	if (!BindEnhancedAbility(DodgeAction, HellwakeTags::Ability_Dodge))
+		PlayerInputComponent->BindAction(TEXT("Dodge"), IE_Pressed, this, &AHellwakeCharacter::ActivateDodge);
+	if (!BindEnhancedAbility(EmberbrandAction, HellwakeTags::Ability_Emberbrand))
+		PlayerInputComponent->BindAction(TEXT("Emberbrand"), IE_Pressed, this, &AHellwakeCharacter::ActivateEmberbrand);
+	if (!BindEnhancedAbility(BulwarkAction, HellwakeTags::Ability_Bulwark))
+		PlayerInputComponent->BindAction(TEXT("Bulwark"), IE_Pressed, this, &AHellwakeCharacter::ActivateBulwark);
+	if (!BindEnhancedAbility(RuinfallAction, HellwakeTags::Ability_Ruinfall))
+		PlayerInputComponent->BindAction(TEXT("Ruinfall"), IE_Pressed, this, &AHellwakeCharacter::ActivateRuinfall);
+	if (!BindEnhancedAbility(WakeOfHellAction, HellwakeTags::Ability_WakeOfHell))
+		PlayerInputComponent->BindAction(TEXT("WakeOfHell"), IE_Pressed, this, &AHellwakeCharacter::ActivateWakeOfHell);
 }
 
 void AHellwakeCharacter::HandleMove(const FInputActionValue& Value)
@@ -198,6 +209,34 @@ void AHellwakeCharacter::HandleMove(const FInputActionValue& Value)
 	}
 }
 
+void AHellwakeCharacter::HandleMoveForward(float Value)
+{
+	if (FMath::IsNearlyZero(Value) || !AbilitySystemComponent)
+	{
+		return;
+	}
+	if (AbilitySystemComponent->HasMatchingGameplayTag(HellwakeTags::State_Dead) ||
+		AbilitySystemComponent->HasMatchingGameplayTag(HellwakeTags::State_Cinematic))
+	{
+		return;
+	}
+	AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+}
+
+void AHellwakeCharacter::HandleMoveRight(float Value)
+{
+	if (FMath::IsNearlyZero(Value) || !AbilitySystemComponent)
+	{
+		return;
+	}
+	if (AbilitySystemComponent->HasMatchingGameplayTag(HellwakeTags::State_Dead) ||
+		AbilitySystemComponent->HasMatchingGameplayTag(HellwakeTags::State_Cinematic))
+	{
+		return;
+	}
+	AddMovementInput(FVector(1.f, 0.f, 0.f), Value);
+}
+
 void AHellwakeCharacter::ActivateAbilityByTag(FGameplayTag Tag)
 {
 	if (AbilitySystemComponent)
@@ -206,6 +245,14 @@ void AHellwakeCharacter::ActivateAbilityByTag(FGameplayTag Tag)
 		AbilitySystemComponent->TryActivateAbilitiesByTag(Container);
 	}
 }
+
+void AHellwakeCharacter::ActivateLightAttack() { ActivateAbilityByTag(HellwakeTags::Ability_Attack_Light); }
+void AHellwakeCharacter::ActivateHeavyAttack() { ActivateAbilityByTag(HellwakeTags::Ability_Attack_Heavy); }
+void AHellwakeCharacter::ActivateDodge() { ActivateAbilityByTag(HellwakeTags::Ability_Dodge); }
+void AHellwakeCharacter::ActivateEmberbrand() { ActivateAbilityByTag(HellwakeTags::Ability_Emberbrand); }
+void AHellwakeCharacter::ActivateBulwark() { ActivateAbilityByTag(HellwakeTags::Ability_Bulwark); }
+void AHellwakeCharacter::ActivateRuinfall() { ActivateAbilityByTag(HellwakeTags::Ability_Ruinfall); }
+void AHellwakeCharacter::ActivateWakeOfHell() { ActivateAbilityByTag(HellwakeTags::Ability_WakeOfHell); }
 
 void AHellwakeCharacter::OnDeathEvent(const FGameplayEventData* Payload)
 {
