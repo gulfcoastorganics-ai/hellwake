@@ -1,4 +1,5 @@
 #include "Abilities/HellwakeAbility_LightAttack.h"
+#include "GameplayEffects/HellwakeGE_AbilityRuntime.h"
 #include "HellwakeGameplayTags.h"
 
 UHellwakeAbility_LightAttack::UHellwakeAbility_LightAttack()
@@ -9,5 +10,5 @@ UHellwakeAbility_LightAttack::UHellwakeAbility_LightAttack()
 	BaseDamage = 120.f;
 	WrathGainOnHit = 5.f;
 	KnockbackImpulse = 50.f;
-	// CooldownGameplayEffectClass = GE_Hellwake_Cooldown_LightAttack (0.42s), set in-editor.
+	CooldownGameplayEffectClass = UHellwakeGE_Cooldown_LightAttack::StaticClass();
 }
