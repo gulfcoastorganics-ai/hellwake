@@ -1,6 +1,8 @@
 #include "Abilities/HellwakeAbility_WakeOfHell.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
+#include "GameplayEffects/HellwakeGE_Damage.h"
+#include "GameplayEffects/HellwakeGE_CinematicLock.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Actor.h"
 #include "HellwakeGameplayTags.h"
@@ -8,6 +10,8 @@
 UHellwakeAbility_WakeOfHell::UHellwakeAbility_WakeOfHell()
 {
 	AbilityTags.AddTag(HellwakeTags::Ability_WakeOfHell);
+	DamageEffectClass = UHellwakeGE_Damage::StaticClass();
+	CinematicLockEffectClass = UHellwakeGE_CinematicLock::StaticClass();
 }
 
 void UHellwakeAbility_WakeOfHell::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -80,9 +84,6 @@ void UHellwakeAbility_WakeOfHell::ActivateAbility(const FGameplayAbilitySpecHand
 			ASC->ApplyGameplayEffectSpecToTarget(*Spec.Data, TargetASC);
 		}
 	}
-
-	// TODO(VFX): shockwave(hero,22,0xff5a1e) + burst(hero,1.6,3,70) -> NS_WakeOfHell.
-	// TODO(Camera): shake = 1.2, hitStop = 0.14 -> strongest shake curve + a short global time-dilation dip.
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, false, false);
 }
