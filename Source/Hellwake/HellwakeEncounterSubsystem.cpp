@@ -4,6 +4,57 @@
 #include "Engine/DataTable.h"
 #include "Hellwake.h"
 
+namespace
+{
+	FText FallbackObjective(const EHellwakeEncounterStage Stage)
+	{
+		switch (Stage)
+		{
+		case EHellwakeEncounterStage::Enter: return FText::FromString(TEXT("Enter the Vaunhold plaza"));
+		case EHellwakeEncounterStage::Wave1: return FText::FromString(TEXT("Break the first procession"));
+		case EHellwakeEncounterStage::Advance: return FText::FromString(TEXT("Advance to the cathedral steps"));
+		case EHellwakeEncounterStage::Wave2: return FText::FromString(TEXT("Clear the ritual guard"));
+		case EHellwakeEncounterStage::Intro: return FText::FromString(TEXT("The Gravewarden wakes"));
+		case EHellwakeEncounterStage::Boss: return FText::FromString(TEXT("Slay the Gravewarden"));
+		case EHellwakeEncounterStage::Reward: return FText::FromString(TEXT("Claim the Last Vow"));
+		case EHellwakeEncounterStage::Done: return FText::FromString(TEXT("Vertical slice complete"));
+		default: return FText::GetEmpty();
+		}
+	}
+
+	FText FallbackStageLabel(const EHellwakeEncounterStage Stage)
+	{
+		switch (Stage)
+		{
+		case EHellwakeEncounterStage::Enter: return FText::FromString(TEXT("ENTERING PLAZA"));
+		case EHellwakeEncounterStage::Wave1: return FText::FromString(TEXT("ENCOUNTER 1"));
+		case EHellwakeEncounterStage::Advance: return FText::FromString(TEXT("ADVANCE"));
+		case EHellwakeEncounterStage::Wave2: return FText::FromString(TEXT("ENCOUNTER 2"));
+		case EHellwakeEncounterStage::Intro: return FText::FromString(TEXT("ELITE INTRO"));
+		case EHellwakeEncounterStage::Boss: return FText::FromString(TEXT("GRAVEWARDEN"));
+		case EHellwakeEncounterStage::Reward: return FText::FromString(TEXT("LEGENDARY DROP"));
+		case EHellwakeEncounterStage::Done: return FText::FromString(TEXT("SLICE COMPLETE"));
+		default: return FText::GetEmpty();
+		}
+	}
+
+	FText FallbackBanner(const EHellwakeEncounterStage Stage)
+	{
+		switch (Stage)
+		{
+		case EHellwakeEncounterStage::Enter: return FText::FromString(TEXT("ENTER THE VAUNHOLD PLAZA"));
+		case EHellwakeEncounterStage::Wave1: return FText::FromString(TEXT("BREAK THE FIRST PROCESSION"));
+		case EHellwakeEncounterStage::Advance: return FText::FromString(TEXT("ADVANCE TO THE CATHEDRAL STEPS"));
+		case EHellwakeEncounterStage::Wave2: return FText::FromString(TEXT("CLEAR THE RITUAL GUARD"));
+		case EHellwakeEncounterStage::Intro: return FText::FromString(TEXT("THE GRAVEWARDEN WAKES"));
+		case EHellwakeEncounterStage::Boss: return FText::FromString(TEXT("SLAY THE GRAVEWARDEN"));
+		case EHellwakeEncounterStage::Reward: return FText::FromString(TEXT("THE NINTH SEAL BREAKS"));
+		case EHellwakeEncounterStage::Done: return FText::FromString(TEXT("VERTICAL SLICE COMPLETE"));
+		default: return FText::GetEmpty();
+		}
+	}
+}
+
 bool UHellwakeEncounterSubsystem::DoesSupportWorldType(EWorldType::Type WorldType) const
 {
 	return WorldType == EWorldType::Game || WorldType == EWorldType::PIE;
@@ -23,6 +74,9 @@ void UHellwakeEncounterSubsystem::BeginEncounter()
 {
 	CurrentStage = EHellwakeEncounterStage::Enter;
 	StageTimer = 0.f;
+	bLegendaryLootTaken = false;
+	TrackedWaveEnemies.Reset();
+	TrackedGravewarden = nullptr;
 	SetStage(EHellwakeEncounterStage::Enter);
 }
 
@@ -57,12 +111,14 @@ void UHellwakeEncounterSubsystem::SetStage(EHellwakeEncounterStage NewStage)
 	StageTimer = 0.f;
 
 	const FHellwakeEncounterStageDefinition* Row = GetRow(NewStage);
-	UE_LOG(LogHellwake, Log, TEXT("Encounter stage -> %s"), Row ? *Row->StageLabel.ToString() : *StageToRowName(NewStage).ToString());
+	const FText StageLabel = Row ? Row->StageLabel : FallbackStageLabel(NewStage);
+	const FText Banner = Row ? Row->BannerText : FallbackBanner(NewStage);
+	UE_LOG(LogHellwake, Log, TEXT("Encounter stage -> %s"), *StageLabel.ToString());
 
 	OnStageChanged.Broadcast(NewStage);
-	if (Row)
+	if (!Banner.IsEmpty())
 	{
-		OnBannerRequested.Broadcast(Row->BannerText);
+		OnBannerRequested.Broadcast(Banner);
 	}
 }
 
@@ -126,13 +182,13 @@ void UHellwakeEncounterSubsystem::Tick(float DeltaSeconds, const FVector& Player
 FText UHellwakeEncounterSubsystem::GetObjectiveText() const
 {
 	const FHellwakeEncounterStageDefinition* Row = GetRow(CurrentStage);
-	return Row ? Row->ObjectiveText : FText::GetEmpty();
+	return Row ? Row->ObjectiveText : FallbackObjective(CurrentStage);
 }
 
 FText UHellwakeEncounterSubsystem::GetStageLabel() const
 {
 	const FHellwakeEncounterStageDefinition* Row = GetRow(CurrentStage);
-	return Row ? Row->StageLabel : FText::GetEmpty();
+	return Row ? Row->StageLabel : FallbackStageLabel(CurrentStage);
 }
 
 int32 UHellwakeEncounterSubsystem::GetAliveHostileCount() const
