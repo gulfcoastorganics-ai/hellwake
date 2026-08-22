@@ -37,6 +37,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Hellwake|Enemy")
 	bool IsDead() const { return bIsDead; }
 
+	UFUNCTION(BlueprintPure, Category = "Hellwake|Enemy")
+	float GetEngagementRingCm() const { return EngagementRingCm; }
+
 	UPROPERTY(BlueprintReadOnly, Category = "Hellwake|Enemy")
 	FGameplayTag RoleTag;
 
