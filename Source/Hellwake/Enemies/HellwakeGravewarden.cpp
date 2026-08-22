@@ -4,6 +4,7 @@
 #include "Loot/HellwakeLootPickup.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "TimerManager.h"
 #include "HellwakeGameplayTags.h"
 #include "Hellwake.h"
 
@@ -24,13 +25,9 @@ void AHellwakeGravewarden::UpdateAI(float DeltaSeconds, AActor* Target)
 		EnterPhase(WantPhase);
 	}
 
-	// Face the target directly (base class behavior, kept here since we
-	// don't call Super::UpdateAI which also does ring-hold movement we
-	// don't want for the boss).
 	const FVector ToTarget = Target->GetActorLocation() - GetActorLocation();
 	SetActorRotation(FRotator(0.f, ToTarget.Rotation().Yaw, 0.f));
 
-	// Soulrend Aura (phase 2+): probabilistic tick DoT within radius.
 	if (CurrentPhase != EHellwakeGravewardenPhase::Phase1 &&
 		ToTarget.Size2D() < SoulrendAuraRadiusCm &&
 		FMath::FRand() < DeltaSeconds * SoulrendAuraProcChancePerSecond)
@@ -65,11 +62,6 @@ void AHellwakeGravewarden::EnterPhase(EHellwakeGravewardenPhase NewPhase)
 	UE_LOG(LogHellwakeAI, Log, TEXT("Gravewarden entering %s"),
 		NewPhase == EHellwakeGravewardenPhase::Phase2 ? TEXT("Phase 2 (Soulrend Aura)") :
 		NewPhase == EHellwakeGravewardenPhase::Phase3 ? TEXT("Phase 3 (Corrupted Flame)") : TEXT("Phase 1"));
-
-	// TODO(Presentation): banner('SOULREND AURA UNBOUND' / 'CORRUPTED FLAME'),
-	// shockwave(16u), camera shake 0.8 -> broadcast Event.Encounter.StageChanged
-	// or a dedicated Event.Boss.PhaseChanged with NewPhase as payload for the
-	// HUD/camera/VFX to react to.
 
 	if (NewPhase == EHellwakeGravewardenPhase::Phase2)
 	{
@@ -108,7 +100,6 @@ void AHellwakeGravewarden::ChooseAndBeginAttack(AActor* Target)
 
 	if (Distance < 800.f && Roll < SweepWeight)
 	{
-		// Sweeping axe: telegraphs a fixed point 4u ahead of current facing.
 		AttackCastTimeRemaining = SweepTelegraphSeconds;
 		AttackCooldownRemaining = bPhase3 ? 1.5f : 2.3f;
 		const FVector Point = GetActorLocation() + GetActorForwardVector() * SweepRangeCm;
@@ -120,12 +111,10 @@ void AHellwakeGravewarden::ChooseAndBeginAttack(AActor* Target)
 			{
 				WeakSelf->DealDamageTo(WeakTarget.Get(), WeakSelf->SweepDamage);
 			}
-			// TODO(VFX): shockwave(ex,ez,7) + camera shake 0.5 at Point.
 		}, SweepTelegraphSeconds, false);
 	}
 	else if (Roll < SweepWeight + SlamWeight)
 	{
-		// Ground slam: telegraphs the target's position at cast time.
 		AttackCastTimeRemaining = SlamTelegraphSeconds;
 		AttackCooldownRemaining = bPhase3 ? 1.8f : 2.8f;
 		const FVector Point = Target->GetActorLocation();
@@ -137,13 +126,10 @@ void AHellwakeGravewarden::ChooseAndBeginAttack(AActor* Target)
 			{
 				WeakSelf->DealDamageTo(WeakTarget.Get(), WeakSelf->SlamDamage);
 			}
-			// TODO(VFX): burst + shockwave(7) at Point, camera shake 0.85.
 		}, SlamTelegraphSeconds, false);
 	}
 	else
 	{
-		// Area denial: 3 (or 5 in phase 3) staggered cinder pillars scattered
-		// around the boss.
 		AttackCastTimeRemaining = 1.2f;
 		AttackCooldownRemaining = 3.4f;
 		const int32 PillarCount = bPhase3 ? 5 : 3;
@@ -161,7 +147,6 @@ void AHellwakeGravewarden::ChooseAndBeginAttack(AActor* Target)
 				{
 					WeakSelf->DealDamageTo(WeakTarget.Get(), WeakSelf->PillarDamage);
 				}
-				// TODO(VFX): burst at Point.
 			}, Delay, false);
 		}
 	}
@@ -171,9 +156,6 @@ void AHellwakeGravewarden::HandleDeath()
 {
 	Super::HandleDeath();
 
-	// Guaranteed Legendary drop — "ASHFALL, THE LAST VOW" — a few meters in
-	// front of the Gravewarden's death position, matching
-	// `dropLoot(warden.position.x, warden.position.z + 3, 'legendary')`.
 	if (LegendaryLootPickupClass && GetWorld())
 	{
 		const FVector DropLocation = GetActorLocation() + GetActorForwardVector() * 300.f;
@@ -181,9 +163,4 @@ void AHellwakeGravewarden::HandleDeath()
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 		GetWorld()->SpawnActor<AHellwakeLootPickup>(LegendaryLootPickupClass, DropLocation, FRotator::ZeroRotator, Params);
 	}
-
-	// TODO(Presentation): banner('THE NINTH SEAL BREAKS'), cine = 3.4,
-	// heavy VFX/shake -> route through Encounter subsystem's stage
-	// transition (Boss -> Reward), which the HellwakeEncounterSubsystem
-	// should already be listening for via this actor's death event.
 }
