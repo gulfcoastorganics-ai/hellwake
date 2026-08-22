@@ -2,6 +2,8 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "Attributes/HellwakeAttributeSet.h"
+#include "Camera/HellwakeCameraDirector.h"
+#include "DrawDebugHelpers.h"
 #include "Enemies/HellwakeEnemyBase.h"
 #include "GameplayEffects/HellwakeGE_Damage.h"
 #include "GameFramework/Character.h"
@@ -38,6 +40,17 @@ void UHellwakeAbility_MeleeAttack::ResolveMeleeHit()
 
 	const FVector Origin = AvatarCharacter->GetActorLocation();
 	const FVector Forward = AvatarCharacter->GetActorForwardVector();
+	const FVector DebugOrigin = Origin + FVector(0.f, 0.f, 75.f);
+	const FVector FlatForwardDebug = FVector(Forward.X, Forward.Y, 0.f).GetSafeNormal();
+	if (!FlatForwardDebug.IsNearlyZero())
+	{
+		const FVector LeftEdge = FlatForwardDebug.RotateAngleAxis(-ArcHalfAngleDegrees, FVector::UpVector) * ReachCm;
+		const FVector RightEdge = FlatForwardDebug.RotateAngleAxis(ArcHalfAngleDegrees, FVector::UpVector) * ReachCm;
+		const FColor ArcColor = BaseDamage >= 200.f ? FColor::Orange : FColor::Yellow;
+		DrawDebugLine(GetWorld(), DebugOrigin, DebugOrigin + LeftEdge, ArcColor, false, 0.14f, 0, 5.f);
+		DrawDebugLine(GetWorld(), DebugOrigin, DebugOrigin + RightEdge, ArcColor, false, 0.14f, 0, 5.f);
+		DrawDebugDirectionalArrow(GetWorld(), DebugOrigin, DebugOrigin + FlatForwardDebug * ReachCm, 70.f, ArcColor, false, 0.14f, 0, 4.f);
+	}
 
 	TArray<AActor*> Overlapped;
 	TArray<AActor*> Ignore;
@@ -47,6 +60,7 @@ void UHellwakeAbility_MeleeAttack::ResolveMeleeHit()
 
 	UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
 	bool bHitAnything = false;
+	bool bAnyCrit = false;
 
 	for (AActor* Target : Overlapped)
 	{
@@ -121,7 +135,10 @@ void UHellwakeAbility_MeleeAttack::ResolveMeleeHit()
 			}
 		}
 
+		DrawDebugSphere(GetWorld(), Target->GetActorLocation() + FVector(0.f, 0.f, 80.f), bCrit ? 95.f : 65.f, 12,
+			bCrit ? FColor::Orange : FColor::Yellow, false, 0.16f, 0, bCrit ? 9.f : 5.f);
 		bHitAnything = true;
+		bAnyCrit = bAnyCrit || bCrit;
 	}
 
 	if (bHitAnything && WrathGainOnHit > 0.f && SourceASC)
@@ -131,6 +148,16 @@ void UHellwakeAbility_MeleeAttack::ResolveMeleeHit()
 		{
 			const float NewWrath = FMath::Min(AttrSet->GetMaxWrath(), AttrSet->GetWrath() + WrathGainOnHit);
 			SourceASC->ApplyModToAttribute(UHellwakeAttributeSet::GetWrathAttribute(), EGameplayModOp::Override, NewWrath);
+		}
+	}
+
+	if (bHitAnything)
+	{
+		if (UHellwakeCameraDirector* Director = AvatarCharacter->FindComponentByClass<UHellwakeCameraDirector>())
+		{
+			const bool bHeavy = BaseDamage >= 200.f;
+			Director->TriggerShake(bAnyCrit ? 0.46f : (bHeavy ? 0.34f : 0.20f));
+			Director->TriggerHitStop(bAnyCrit ? 0.055f : (bHeavy ? 0.040f : 0.025f));
 		}
 	}
 
