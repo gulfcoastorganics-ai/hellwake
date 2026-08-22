@@ -1,5 +1,6 @@
 #include "Abilities/HellwakeAbility_MeleeAttack.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystemInterface.h"
 #include "Attributes/HellwakeAttributeSet.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -21,12 +22,6 @@ void UHellwakeAbility_MeleeAttack::ActivateAbility(const FGameplayAbilitySpecHan
 	}
 
 	ResolveMeleeHit();
-
-	// The prototype resolves the hit synchronously on the click frame and
-	// the ability "ends" immediately (only a cosmetic swing timer, P.swing,
-	// continues). Anim-driven ports should instead play a montage here and
-	// call ResolveMeleeHit() from an AnimNotify at the true contact frame —
-	// see project-bible/combat.md "Do not carry over: instant hit-scan".
 	EndAbility(Handle, ActorInfo, ActivationInfo, false, false);
 }
 
@@ -66,22 +61,26 @@ void UHellwakeAbility_MeleeAttack::ResolveMeleeHit()
 
 		FVector ToTarget = Target->GetActorLocation() - Origin;
 		const float DistanceCm = ToTarget.Size2D();
-		// Prototype adds `e.def.ring * 0.4` to reach as a per-enemy fudge so
-		// wide-formation enemies (the Pyre Acolyte's 13-unit ring) aren't
-		// impossibly out of reach while still standing far outside true
-		// melee. Ported here as a per-target GameplayTag query on the
-		// target's own "ring" data (see FHellwakeEnemyDefinition::EngagementRingCm)
-		// looked up through a designer-implemented interface in-editor;
-		// C++ falls back to ReachCm alone when that data isn't available.
 		if (DistanceCm > ReachCm + OverlapSweepRadiusCm)
 		{
 			continue;
 		}
 
 		ToTarget.Z = 0.f;
-		ToTarget.Normalize();
-		FVector FlatForward = Forward; FlatForward.Z = 0.f; FlatForward.Normalize();
-		const float AngleDegrees = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(FlatForward, ToTarget)));
+		if (!ToTarget.Normalize())
+		{
+			continue;
+		}
+
+		FVector FlatForward = Forward;
+		FlatForward.Z = 0.f;
+		if (!FlatForward.Normalize())
+		{
+			continue;
+		}
+
+		const float Dot = FMath::Clamp(FVector::DotProduct(FlatForward, ToTarget), -1.f, 1.f);
+		const float AngleDegrees = FMath::RadiansToDegrees(FMath::Acos(Dot));
 		if (AngleDegrees > ArcHalfAngleDegrees)
 		{
 			continue;
