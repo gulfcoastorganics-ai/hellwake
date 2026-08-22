@@ -1,7 +1,9 @@
 #include "Enemies/HellwakeGravewarden.h"
 #include "Attributes/HellwakeAttributeSet.h"
 #include "AbilitySystemComponent.h"
+#include "Camera/HellwakeCameraDirector.h"
 #include "Data/HellwakeEnemyDefinition.h"
+#include "DrawDebugHelpers.h"
 #include "Loot/HellwakeLootPickup.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -42,6 +44,18 @@ namespace
 		}
 		return Def;
 	}
+
+	void ShakeTarget(AActor* Target, float Magnitude)
+	{
+		if (!Target)
+		{
+			return;
+		}
+		if (UHellwakeCameraDirector* Director = Target->FindComponentByClass<UHellwakeCameraDirector>())
+		{
+			Director->TriggerShake(Magnitude);
+		}
+	}
 }
 
 AHellwakeGravewarden::AHellwakeGravewarden()
@@ -67,11 +81,20 @@ void AHellwakeGravewarden::UpdateAI(float DeltaSeconds, AActor* Target)
 	const FVector ToTarget = Target->GetActorLocation() - GetActorLocation();
 	SetActorRotation(FRotator(0.f, ToTarget.Rotation().Yaw, 0.f));
 
-	if (CurrentPhase != EHellwakeGravewardenPhase::Phase1 &&
-		ToTarget.Size2D() < SoulrendAuraRadiusCm &&
-		FMath::FRand() < DeltaSeconds * SoulrendAuraProcChancePerSecond)
+	if (CurrentPhase != EHellwakeGravewardenPhase::Phase1 && ToTarget.Size2D() < SoulrendAuraRadiusCm)
 	{
-		DealDamageTo(Target, SoulrendAuraDamagePerTick);
+		// The final Niagara aura will replace this, but the native slice needs
+		// a visible read for the phase-2+ danger zone immediately.
+		if (FMath::FRand() < DeltaSeconds * 3.f)
+		{
+			DrawDebugCircle(GetWorld(), GetActorLocation() + FVector(0.f, 0.f, 12.f), SoulrendAuraRadiusCm, 48,
+				FColor::Purple, false, 0.36f, 0, 3.f, FVector(1.f, 0.f, 0.f), FVector(0.f, 1.f, 0.f), false);
+		}
+		if (FMath::FRand() < DeltaSeconds * SoulrendAuraProcChancePerSecond)
+		{
+			DealDamageTo(Target, SoulrendAuraDamagePerTick);
+			ShakeTarget(Target, 0.12f);
+		}
 	}
 
 	if (AttackCastTimeRemaining > 0.f)
@@ -101,6 +124,15 @@ void AHellwakeGravewarden::EnterPhase(EHellwakeGravewardenPhase NewPhase)
 	UE_LOG(LogHellwakeAI, Log, TEXT("Gravewarden entering %s"),
 		NewPhase == EHellwakeGravewardenPhase::Phase2 ? TEXT("Phase 2 (Soulrend Aura)") :
 		NewPhase == EHellwakeGravewardenPhase::Phase3 ? TEXT("Phase 3 (Corrupted Flame)") : TEXT("Phase 1"));
+
+	const FColor PhaseColor = NewPhase == EHellwakeGravewardenPhase::Phase3 ? FColor::Orange : FColor::Purple;
+	DrawDebugSphere(GetWorld(), GetActorLocation() + FVector(0.f, 0.f, 160.f), 340.f, 28, PhaseColor, false, 0.65f, 0, 12.f);
+	DrawDebugCircle(GetWorld(), GetActorLocation() + FVector(0.f, 0.f, 12.f), 1600.f, 72, PhaseColor,
+		false, 0.75f, 0, 9.f, FVector(1.f, 0.f, 0.f), FVector(0.f, 1.f, 0.f), false);
+	if (AActor* Target = FindPrimaryTarget())
+	{
+		ShakeTarget(Target, 0.8f);
+	}
 
 	if (NewPhase == EHellwakeGravewardenPhase::Phase2)
 	{
@@ -138,6 +170,8 @@ void AHellwakeGravewarden::SpawnAdds(TSubclassOf<AHellwakeEnemyBase> EnemyClass,
 		if (AHellwakeEnemyBase* Add = GetWorld()->SpawnActor<AHellwakeEnemyBase>(EnemyClass, SpawnLocation, FRotator::ZeroRotator, Params))
 		{
 			Add->InitializeFromDefinition(*Definition, DefinitionRowName);
+			DrawDebugSphere(GetWorld(), SpawnLocation + FVector(0.f, 0.f, 80.f), 90.f, 12,
+				DefinitionRowName == TEXT("wraith") ? FColor::Purple : FColor::Red, false, 0.4f, 0, 5.f);
 		}
 	}
 }
@@ -156,13 +190,20 @@ void AHellwakeGravewarden::ChooseAndBeginAttack(AActor* Target)
 		AttackCastTimeRemaining = SweepTelegraphSeconds;
 		AttackCooldownRemaining = bPhase3 ? 1.5f : 2.3f;
 		const FVector Point = GetActorLocation() + GetActorForwardVector() * SweepRangeCm;
+		DrawDebugCircle(GetWorld(), Point + FVector(0.f, 0.f, 10.f), SweepRadiusCm, 56, FColor::Red,
+			false, SweepTelegraphSeconds, 0, 8.f, FVector(1.f, 0.f, 0.f), FVector(0.f, 1.f, 0.f), false);
+		DrawDebugDirectionalArrow(GetWorld(), GetActorLocation() + FVector(0.f, 0.f, 130.f), Point + FVector(0.f, 0.f, 130.f),
+			160.f, FColor::Red, false, SweepTelegraphSeconds, 0, 9.f);
+
 		FTimerHandle Handle;
 		GetWorld()->GetTimerManager().SetTimer(Handle, [WeakSelf, WeakTarget, Point]()
 		{
 			if (!WeakSelf.IsValid() || !WeakTarget.IsValid()) return;
+			DrawDebugSphere(WeakSelf->GetWorld(), Point + FVector(0.f, 0.f, 80.f), 210.f, 18, FColor::Red, false, 0.22f, 0, 10.f);
 			if (FVector::Dist2D(WeakTarget->GetActorLocation(), Point) < WeakSelf->SweepRadiusCm)
 			{
 				WeakSelf->DealDamageTo(WeakTarget.Get(), WeakSelf->SweepDamage);
+				ShakeTarget(WeakTarget.Get(), 0.5f);
 			}
 		}, SweepTelegraphSeconds, false);
 	}
@@ -171,13 +212,18 @@ void AHellwakeGravewarden::ChooseAndBeginAttack(AActor* Target)
 		AttackCastTimeRemaining = SlamTelegraphSeconds;
 		AttackCooldownRemaining = bPhase3 ? 1.8f : 2.8f;
 		const FVector Point = Target->GetActorLocation();
+		DrawDebugCircle(GetWorld(), Point + FVector(0.f, 0.f, 10.f), SlamRadiusCm, 56, FColor::Orange,
+			false, SlamTelegraphSeconds, 0, 9.f, FVector(1.f, 0.f, 0.f), FVector(0.f, 1.f, 0.f), false);
+
 		FTimerHandle Handle;
 		GetWorld()->GetTimerManager().SetTimer(Handle, [WeakSelf, WeakTarget, Point]()
 		{
 			if (!WeakSelf.IsValid() || !WeakTarget.IsValid()) return;
+			DrawDebugSphere(WeakSelf->GetWorld(), Point + FVector(0.f, 0.f, 80.f), 260.f, 20, FColor::Orange, false, 0.24f, 0, 11.f);
 			if (FVector::Dist2D(WeakTarget->GetActorLocation(), Point) < WeakSelf->SlamRadiusCm)
 			{
 				WeakSelf->DealDamageTo(WeakTarget.Get(), WeakSelf->SlamDamage);
+				ShakeTarget(WeakTarget.Get(), 0.85f);
 			}
 		}, SlamTelegraphSeconds, false);
 	}
@@ -192,13 +238,20 @@ void AHellwakeGravewarden::ChooseAndBeginAttack(AActor* Target)
 			const float Range = FMath::FRandRange(PillarMinRangeCm, PillarMaxRangeCm);
 			const FVector Point = GetActorLocation() + FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.f) * Range;
 			const float Delay = 1.3f + i * 0.16f;
+			DrawDebugCircle(GetWorld(), Point + FVector(0.f, 0.f, 10.f), PillarRadiusCm, 40,
+				bPhase3 ? FColor::Orange : FColor::Purple, false, Delay, 0, 7.f,
+				FVector(1.f, 0.f, 0.f), FVector(0.f, 1.f, 0.f), false);
+
 			FTimerHandle Handle;
-			GetWorld()->GetTimerManager().SetTimer(Handle, [WeakSelf, WeakTarget, Point]()
+			GetWorld()->GetTimerManager().SetTimer(Handle, [WeakSelf, WeakTarget, Point, bPhase3]()
 			{
 				if (!WeakSelf.IsValid() || !WeakTarget.IsValid()) return;
+				DrawDebugCylinder(WeakSelf->GetWorld(), Point, Point + FVector(0.f, 0.f, 420.f), 110.f, 14,
+					bPhase3 ? FColor::Orange : FColor::Purple, false, 0.32f, 0, 8.f);
 				if (FVector::Dist2D(WeakTarget->GetActorLocation(), Point) < WeakSelf->PillarRadiusCm)
 				{
 					WeakSelf->DealDamageTo(WeakTarget.Get(), WeakSelf->PillarDamage);
+					ShakeTarget(WeakTarget.Get(), 0.32f);
 				}
 			}, Delay, false);
 		}
@@ -212,7 +265,20 @@ void AHellwakeGravewarden::HandleDeath()
 		return;
 	}
 
+	AActor* Target = FindPrimaryTarget();
 	Super::HandleDeath();
+
+	DrawDebugSphere(GetWorld(), GetActorLocation() + FVector(0.f, 0.f, 180.f), 520.f, 32, FColor::Orange, false, 0.8f, 0, 14.f);
+	DrawDebugCircle(GetWorld(), GetActorLocation() + FVector(0.f, 0.f, 12.f), 2200.f, 80, FColor::Orange,
+		false, 1.f, 0, 12.f, FVector(1.f, 0.f, 0.f), FVector(0.f, 1.f, 0.f), false);
+	ShakeTarget(Target, 1.15f);
+	if (Target)
+	{
+		if (UHellwakeCameraDirector* Director = Target->FindComponentByClass<UHellwakeCameraDirector>())
+		{
+			Director->TriggerHitStop(0.11f);
+		}
+	}
 
 	if (LegendaryLootPickupClass && GetWorld())
 	{
