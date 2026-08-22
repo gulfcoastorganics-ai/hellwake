@@ -297,6 +297,10 @@ void AHellwakeCharacter::BeginCinematic(float Duration)
 		return;
 	}
 	AbilitySystemComponent->AddLooseGameplayTag(HellwakeTags::State_Cinematic);
+	if (CameraDirector)
+	{
+		CameraDirector->SetCinematicActive(true);
+	}
 	if (Duration > 0.f)
 	{
 		GetWorld()->GetTimerManager().SetTimer(CinematicEndHandle, this, &AHellwakeCharacter::EndCinematic, Duration, false);
@@ -308,5 +312,17 @@ void AHellwakeCharacter::EndCinematic()
 	if (AbilitySystemComponent)
 	{
 		AbilitySystemComponent->RemoveLooseGameplayTag(HellwakeTags::State_Cinematic);
+	}
+	if (CameraDirector)
+	{
+		CameraDirector->SetCinematicActive(false);
+	}
+}
+
+void AHellwakeCharacter::SetBossFightCameraActive(bool bActive)
+{
+	if (CameraDirector)
+	{
+		CameraDirector->SetBossFightActive(bActive);
 	}
 }
