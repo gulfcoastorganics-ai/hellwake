@@ -2,6 +2,7 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "Attributes/HellwakeAttributeSet.h"
+#include "Enemies/HellwakeEnemyBase.h"
 #include "GameplayEffects/HellwakeGE_Damage.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -63,7 +64,9 @@ void UHellwakeAbility_MeleeAttack::ResolveMeleeHit()
 
 		FVector ToTarget = Target->GetActorLocation() - Origin;
 		const float DistanceCm = ToTarget.Size2D();
-		if (DistanceCm > ReachCm + OverlapSweepRadiusCm)
+		const AHellwakeEnemyBase* EnemyTarget = Cast<AHellwakeEnemyBase>(Target);
+		const float TargetRadiusFudge = EnemyTarget ? EnemyTarget->GetEngagementRingCm() * 0.4f : 0.f;
+		if (DistanceCm > ReachCm + TargetRadiusFudge)
 		{
 			continue;
 		}
