@@ -2,10 +2,15 @@
 
 #include "Misc/AutomationTest.h"
 #include "Attributes/HellwakeAttributeSet.h"
+#include "Enemies/HellwakeEnemyBase.h"
+#include "Enemies/HellwakeGravewarden.h"
 #include "HellwakeGameplayTags.h"
 #include "HellwakeGameMode.h"
+#include "HUD/HellwakeDebugHUD.h"
+#include "Loot/HellwakeLootPickup.h"
 #include "Player/HellwakeCharacter.h"
 #include "Player/HellwakePlayerController.h"
+#include "GameplayEffects/HellwakeGE_AbilityRuntime.h"
 #include "GameplayEffects/HellwakeGE_Damage.h"
 #include "GameplayEffects/HellwakeGE_PlayerDefaults.h"
 #include "GameplayEffects/HellwakeGE_PassiveRegen.h"
@@ -24,6 +29,15 @@ bool FHellwakeNativeTagsSmokeTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("Bulwark tag registered"), HellwakeTags::Ability_Bulwark.IsValid());
 	TestTrue(TEXT("Ruinfall tag registered"), HellwakeTags::Ability_Ruinfall.IsValid());
 	TestTrue(TEXT("Wake of Hell tag registered"), HellwakeTags::Ability_WakeOfHell.IsValid());
+
+	TestTrue(TEXT("Light cooldown tag registered"), HellwakeTags::Cooldown_LightAttack.IsValid());
+	TestTrue(TEXT("Heavy cooldown tag registered"), HellwakeTags::Cooldown_HeavyAttack.IsValid());
+	TestTrue(TEXT("Dodge cooldown tag registered"), HellwakeTags::Cooldown_Dodge.IsValid());
+	TestTrue(TEXT("Emberbrand cooldown tag registered"), HellwakeTags::Cooldown_Emberbrand.IsValid());
+	TestTrue(TEXT("Bulwark cooldown tag registered"), HellwakeTags::Cooldown_Bulwark.IsValid());
+	TestTrue(TEXT("Ruinfall cooldown tag registered"), HellwakeTags::Cooldown_Ruinfall.IsValid());
+	TestTrue(TEXT("Wake of Hell cooldown tag registered"), HellwakeTags::Cooldown_WakeOfHell.IsValid());
+
 	TestTrue(TEXT("Death tag registered"), HellwakeTags::Event_Death.IsValid());
 	TestTrue(TEXT("Damage SetByCaller tag registered from config"), FGameplayTag::RequestGameplayTag(FName(TEXT("Data.Damage")), false).IsValid());
 	return true;
@@ -69,9 +83,18 @@ bool FHellwakeNativeFrameworkSmokeTest::RunTest(const FString& Parameters)
 
 	TestEqual(TEXT("Native player pawn is default"), GameModeCDO->DefaultPawnClass.Get(), AHellwakeCharacter::StaticClass());
 	TestEqual(TEXT("Native player controller is default"), GameModeCDO->PlayerControllerClass.Get(), AHellwakePlayerController::StaticClass());
+	TestEqual(TEXT("Native debug HUD is default"), GameModeCDO->HUDClass.Get(), AHellwakeDebugHUD::StaticClass());
+
 	TestNotNull(TEXT("Native damage GameplayEffect exists"), GetDefault<UHellwakeGE_Damage>());
 	TestNotNull(TEXT("Native player-defaults GameplayEffect exists"), GetDefault<UHellwakeGE_PlayerDefaults>());
 	TestNotNull(TEXT("Native passive-regen GameplayEffect exists"), GetDefault<UHellwakeGE_PassiveRegen>());
+	TestNotNull(TEXT("Native Emberbrand cooldown exists"), GetDefault<UHellwakeGE_Cooldown_Emberbrand>());
+	TestNotNull(TEXT("Native Bulwark cost exists"), GetDefault<UHellwakeGE_Cost_Bulwark>());
+	TestNotNull(TEXT("Native Ruinfall cost exists"), GetDefault<UHellwakeGE_Cost_Ruinfall>());
+
+	TestNotNull(TEXT("Native enemy base class exists"), GetDefault<AHellwakeEnemyBase>());
+	TestNotNull(TEXT("Native Gravewarden class exists"), GetDefault<AHellwakeGravewarden>());
+	TestNotNull(TEXT("Native loot pickup class exists"), GetDefault<AHellwakeLootPickup>());
 	return true;
 }
 
