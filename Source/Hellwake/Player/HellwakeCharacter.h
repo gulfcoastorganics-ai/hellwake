@@ -19,12 +19,16 @@
 class UAbilitySystemComponent;
 class UHellwakeAttributeSet;
 class UHellwakeCombatComponent;
+class UHellwakeVitalityComponent;
+class UHellwakeCameraDirector;
+class UHellwakeGameplayAbility;
 class USpringArmComponent;
 class UCameraComponent;
 class UGameplayEffect;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
+struct FGameplayEventData;
 
 UCLASS()
 class HELLWAKE_API AHellwakeCharacter : public ACharacter, public IAbilitySystemInterface
@@ -43,13 +47,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Hellwake|Combat")
 	UHellwakeAttributeSet* GetHellwakeAttributeSet() const { return AttributeSet; }
 
-	// Called from HellwakeAttributeSet::PostGameplayEffectExecute via the
-	// Event.Death gameplay event -> bound in BeginPlay. Ports respawn():
-	// 1.8s delay, then full HP/Wrath restore + teleport to SpawnPoint.
 	void Die();
 
-	// Ports setStage('intro')'s `cine = 3.2` and similar cinematic locks:
-	// grants State.Cinematic for Duration seconds (0 = until EndCinematic).
 	UFUNCTION(BlueprintCallable, Category = "Hellwake|Cinematic")
 	void BeginCinematic(float Duration);
 	UFUNCTION(BlueprintCallable, Category = "Hellwake|Cinematic")
@@ -68,12 +67,8 @@ protected:
 	TObjectPtr<UHellwakeCombatComponent> CombatComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Hellwake|Combat")
-	TObjectPtr<class UHellwakeVitalityComponent> VitalityComponent;
+	TObjectPtr<UHellwakeVitalityComponent> VitalityComponent;
 
-	// Fixed isometric boom — never rotates with input, matching the
-	// prototype's static CAM_OFF = (0, 27, 25) camera offset (see
-	// HellwakeCameraComponent for the zoom/shake/target-lerp behavior that
-	// layers on top of this boom).
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Hellwake|Camera")
 	TObjectPtr<USpringArmComponent> CameraBoom;
 
@@ -81,22 +76,14 @@ protected:
 	TObjectPtr<UCameraComponent> TopDownCamera;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Hellwake|Camera")
-	TObjectPtr<class UHellwakeCameraDirector> CameraDirector;
+	TObjectPtr<UHellwakeCameraDirector> CameraDirector;
 
-	// Granted on PossessedBy. One entry per HellwakeTags::Ability_* tag;
-	// index-matched pairing is intentional (kept simple over a TMap for
-	// designer readability in the details panel).
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hellwake|Abilities")
-	TArray<TSubclassOf<class UHellwakeGameplayAbility>> StartingAbilities;
+	TArray<TSubclassOf<UHellwakeGameplayAbility>> StartingAbilities;
 
-	// Default attribute values applied via an instant GameplayEffect on
-	// BeginPlay instead of hardcoding into the AttributeSet constructor, so
-	// designers can retune without a recompile. GE_Hellwake_PlayerDefaults.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hellwake|Abilities")
 	TSubclassOf<UGameplayEffect> DefaultAttributesEffectClass;
 
-	// GE_Hellwake_PassiveRegen — applied once on possess, runs for the
-	// character's lifetime.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hellwake|Abilities")
 	TSubclassOf<UGameplayEffect> PassiveRegenEffectClass;
 
@@ -120,7 +107,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hellwake|Input")
 	TObjectPtr<UInputAction> WakeOfHellAction;
 
-	// Prototype: hero.position.set(0,0,18) both at boot and in respawn().
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Hellwake|Respawn")
 	FVector SpawnPoint = FVector(0.f, 1800.f, 0.f);
 
@@ -130,7 +116,6 @@ protected:
 private:
 	void HandleMove(const FInputActionValue& Value);
 	void ActivateAbilityByTag(FGameplayTag Tag);
-
 	void OnDeathEvent(const FGameplayEventData* Payload);
 
 	FTimerHandle RespawnHandle;
