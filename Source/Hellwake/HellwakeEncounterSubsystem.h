@@ -32,7 +32,11 @@ class HELLWAKE_API UHellwakeEncounterSubsystem : public UWorldSubsystem
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
-	virtual bool DoesSupportWorld(UWorld* World) const override;
+
+	// UWorldSubsystem exposes DoesSupportWorldType, not DoesSupportWorld.
+	// Keep the encounter runtime-only so editor preview worlds do not create
+	// gameplay state unexpectedly.
+	virtual bool DoesSupportWorldType(EWorldType::Type WorldType) const override;
 
 	// Called once by the GameMode/level BeginPlay after the player pawn
 	// exists. Enters Stage::Enter.
