@@ -2,6 +2,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
+#include "Misc/App.h"
 
 UHellwakeCameraDirector::UHellwakeCameraDirector()
 {
@@ -19,6 +20,16 @@ void UHellwakeCameraDirector::BeginPlay()
 			BaseArmLength = CachedBoom->TargetArmLength;
 		}
 	}
+}
+
+void UHellwakeCameraDirector::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (bHitStopApplied && GetWorld())
+	{
+		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), PreviousGlobalTimeDilation);
+		bHitStopApplied = false;
+	}
+	Super::EndPlay(EndPlayReason);
 }
 
 void UHellwakeCameraDirector::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -40,10 +51,14 @@ void UHellwakeCameraDirector::TickComponent(float DeltaTime, ELevelTick TickType
 
 	if (HitStopRemaining > 0.f)
 	{
-		HitStopRemaining -= DeltaTime;
+		// Global time dilation also scales ActorComponent DeltaTime, so use
+		// real frame time here. Otherwise a 0.14 s impact freeze at 0.12x
+		// dilation would incorrectly last more than a second in real time.
+		const float RealDeltaTime = FMath::Max(static_cast<float>(FApp::GetDeltaTime()), 0.f);
+		HitStopRemaining -= RealDeltaTime;
 		if (HitStopRemaining <= 0.f && bHitStopApplied)
 		{
-			UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.f);
+			UGameplayStatics::SetGlobalTimeDilation(GetWorld(), PreviousGlobalTimeDilation);
 			bHitStopApplied = false;
 		}
 	}
@@ -56,9 +71,15 @@ void UHellwakeCameraDirector::TriggerShake(float Magnitude)
 
 void UHellwakeCameraDirector::TriggerHitStop(float Seconds)
 {
+	if (Seconds <= 0.f || !GetWorld())
+	{
+		return;
+	}
+
 	HitStopRemaining = FMath::Max(HitStopRemaining, Seconds);
 	if (!bHitStopApplied)
 	{
+		PreviousGlobalTimeDilation = UGameplayStatics::GetGlobalTimeDilation(GetWorld());
 		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), HitStopTimeDilation);
 		bHitStopApplied = true;
 	}
