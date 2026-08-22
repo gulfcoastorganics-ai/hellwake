@@ -19,6 +19,8 @@
 #include "Components/InputComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Camera/CameraComponent.h"
+#include "DrawDebugHelpers.h"
+#include "Engine/StaticMesh.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
@@ -270,12 +272,26 @@ void AHellwakeCharacter::OnDeathEvent(const FGameplayEventData* Payload)
 
 void AHellwakeCharacter::Die()
 {
-	if (!AbilitySystemComponent)
+	if (!AbilitySystemComponent || AbilitySystemComponent->HasMatchingGameplayTag(HellwakeTags::State_Dead))
 	{
 		return;
 	}
+
 	AbilitySystemComponent->AddLooseGameplayTag(HellwakeTags::State_Dead);
 	AbilitySystemComponent->CancelAbilities();
+
+	if (UCharacterMovementComponent* Movement = GetCharacterMovement())
+	{
+		Movement->StopMovementImmediately();
+		Movement->DisableMovement();
+	}
+	SetActorEnableCollision(false);
+
+	DrawDebugSphere(GetWorld(), GetActorLocation() + FVector(0.f, 0.f, 90.f), 180.f, 18, FColor::Red, false, 0.55f, 0, 8.f);
+	if (CameraDirector)
+	{
+		CameraDirector->TriggerShake(0.85f);
+	}
 
 	GetWorld()->GetTimerManager().SetTimer(RespawnHandle, [this]()
 	{
@@ -283,10 +299,20 @@ void AHellwakeCharacter::Die()
 		{
 			return;
 		}
-		AbilitySystemComponent->RemoveLooseGameplayTag(HellwakeTags::State_Dead);
+
+		SetActorLocation(SpawnPoint, false, nullptr, ETeleportType::TeleportPhysics);
+		SetActorEnableCollision(true);
+		if (UCharacterMovementComponent* Movement = GetCharacterMovement())
+		{
+			Movement->StopMovementImmediately();
+			Movement->SetMovementMode(MOVE_Walking);
+		}
+
 		AbilitySystemComponent->ApplyModToAttribute(UHellwakeAttributeSet::GetHealthAttribute(), EGameplayModOp::Override, AttributeSet->GetMaxHealth());
 		AbilitySystemComponent->ApplyModToAttribute(UHellwakeAttributeSet::GetWrathAttribute(), EGameplayModOp::Override, AttributeSet->GetMaxWrath());
-		SetActorLocation(SpawnPoint);
+		AbilitySystemComponent->RemoveLooseGameplayTag(HellwakeTags::State_Dead);
+
+		DrawDebugSphere(GetWorld(), SpawnPoint + FVector(0.f, 0.f, 90.f), 140.f, 16, FColor::Cyan, false, 0.4f, 0, 6.f);
 	}, RespawnDelaySeconds, false);
 }
 
@@ -296,7 +322,12 @@ void AHellwakeCharacter::BeginCinematic(float Duration)
 	{
 		return;
 	}
+
 	AbilitySystemComponent->AddLooseGameplayTag(HellwakeTags::State_Cinematic);
+	if (UCharacterMovementComponent* Movement = GetCharacterMovement())
+	{
+		Movement->StopMovementImmediately();
+	}
 	if (CameraDirector)
 	{
 		CameraDirector->SetCinematicActive(true);
