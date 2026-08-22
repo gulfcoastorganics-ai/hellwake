@@ -42,7 +42,6 @@ public:
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
-
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION(BlueprintPure, Category = "Hellwake|Combat")
@@ -116,7 +115,16 @@ protected:
 
 private:
 	void HandleMove(const FInputActionValue& Value);
+	void HandleMoveForward(float Value);
+	void HandleMoveRight(float Value);
 	void ActivateAbilityByTag(FGameplayTag Tag);
+	void ActivateLightAttack();
+	void ActivateHeavyAttack();
+	void ActivateDodge();
+	void ActivateEmberbrand();
+	void ActivateBulwark();
+	void ActivateRuinfall();
+	void ActivateWakeOfHell();
 	void OnDeathEvent(const FGameplayEventData* Payload);
 
 	FTimerHandle RespawnHandle;
