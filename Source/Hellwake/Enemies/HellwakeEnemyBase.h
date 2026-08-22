@@ -15,6 +15,7 @@ class UAbilitySystemComponent;
 class UHellwakeAttributeSet;
 class UHellwakeVitalityComponent;
 class UHellwakeLootDropComponent;
+class UStaticMeshComponent;
 class UGameplayEffect;
 class UDataTable;
 struct FGameplayEventData;
@@ -55,6 +56,11 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Hellwake|Loot")
 	TObjectPtr<UHellwakeLootDropComponent> LootDropComponent;
+
+	// Engine-basic-shape fallback used until each enemy Blueprint gets its
+	// production skeletal mesh. Gravewarden scales this up in its ctor.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Hellwake|Fallback")
+	TObjectPtr<UStaticMeshComponent> PlaceholderMesh;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hellwake|Data")
 	FName EnemyDefinitionRowName;
