@@ -29,7 +29,7 @@ public:
 	// the asset-free visual fallback, so native drops do not depend on a
 	// Blueprint construction script.
 	UFUNCTION(BlueprintCallable, Category = "Hellwake|Loot")
-	void ConfigurePickup(FName InRarityRowName, UDataTable* InLootDefinitionTable = nullptr);
+	void ConfigurePickup(FName InRarityRowName, UDataTable* InLootDefinitionTable);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Hellwake|Loot")
 	FName RarityRowName;
