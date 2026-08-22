@@ -1,13 +1,6 @@
 // Kaervoss, the player character. Owns its own ASC (player-state-less
 // single-player-first design — see project-bible/unreal-implementation.md
 // for the multiplayer note on moving the ASC to PlayerState later).
-//
-// Movement/facing model ports the prototype exactly: CharacterMovement
-// orients rotation to movement input (bOrientRotationToMovement = true), so
-// "facing" is purely a function of the last movement direction, matching
-// `P.facing += angDiff(atan2(vel.x, vel.z), P.facing) * min(1, 14*dt)` in
-// hellwake-game.js. There is deliberately no controller-yaw / mouse-look
-// binding here — see project-bible/combat.md for the targeting discussion.
 #pragma once
 
 #include "CoreMinimal.h"
@@ -25,6 +18,7 @@ class UHellwakeCameraDirector;
 class UHellwakeGameplayAbility;
 class USpringArmComponent;
 class UCameraComponent;
+class UStaticMeshComponent;
 class UGameplayEffect;
 class UInputMappingContext;
 class UInputAction;
@@ -68,6 +62,11 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Hellwake|Combat")
 	TObjectPtr<UHellwakeVitalityComponent> VitalityComponent;
+
+	// Engine-basic-shape fallback so Kaervoss is visible in a clean native
+	// checkout. A skeletal mesh Blueprint can hide/replace this component.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Hellwake|Fallback")
+	TObjectPtr<UStaticMeshComponent> PlaceholderMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Hellwake|Camera")
 	TObjectPtr<USpringArmComponent> CameraBoom;
