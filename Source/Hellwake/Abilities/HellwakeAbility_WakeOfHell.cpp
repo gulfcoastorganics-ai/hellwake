@@ -1,9 +1,12 @@
 #include "Abilities/HellwakeAbility_WakeOfHell.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
+#include "Camera/HellwakeCameraDirector.h"
 #include "GameplayEffects/HellwakeGE_Damage.h"
 #include "GameplayEffects/HellwakeGE_CinematicLock.h"
 #include "GameplayEffects/HellwakeGE_AbilityRuntime.h"
+#include "Player/HellwakeCharacter.h"
+#include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Actor.h"
 #include "HellwakeGameplayTags.h"
@@ -41,6 +44,10 @@ void UHellwakeAbility_WakeOfHell::ActivateAbility(const FGameplayAbilitySpecHand
 		{
 			ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data);
 		}
+	}
+	if (AHellwakeCharacter* Player = Cast<AHellwakeCharacter>(Avatar))
+	{
+		Player->BeginCinematic(1.6f);
 	}
 
 	const FVector Origin = Avatar->GetActorLocation();
@@ -85,6 +92,16 @@ void UHellwakeAbility_WakeOfHell::ActivateAbility(const FGameplayAbilitySpecHand
 			Spec.Data->DynamicGrantedTags.AddTag(HellwakeTags::Event_Damage_Crit);
 			ASC->ApplyGameplayEffectSpecToTarget(*Spec.Data, TargetASC);
 		}
+	}
+
+	DrawDebugCircle(GetWorld(), Origin + FVector(0.f, 0.f, 10.f), RadiusCm, 96, FColor::Orange,
+		false, 0.65f, 0, 12.f, FVector(1.f, 0.f, 0.f), FVector(0.f, 1.f, 0.f), false);
+	DrawDebugSphere(GetWorld(), Origin + FVector(0.f, 0.f, 100.f), FMath::Min(RadiusCm * 0.28f, 500.f), 24,
+		FColor::Red, false, 0.35f, 0, 10.f);
+	if (UHellwakeCameraDirector* Director = Avatar->FindComponentByClass<UHellwakeCameraDirector>())
+	{
+		Director->TriggerShake(1.2f);
+		Director->TriggerHitStop(0.14f);
 	}
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, false, false);
