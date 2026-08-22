@@ -66,8 +66,26 @@ AHellwakeGravewarden::AHellwakeGravewarden()
 	LegendaryLootPickupClass = AHellwakeLootPickup::StaticClass();
 }
 
+int32 AHellwakeGravewarden::GetAliveAddCount() const
+{
+	int32 Count = 0;
+	for (const TObjectPtr<AHellwakeEnemyBase>& Add : SpawnedAdds)
+	{
+		if (IsValid(Add) && !Add->IsDead())
+		{
+			++Count;
+		}
+	}
+	return Count;
+}
+
 void AHellwakeGravewarden::UpdateAI(float DeltaSeconds, AActor* Target)
 {
+	SpawnedAdds.RemoveAll([](const TObjectPtr<AHellwakeEnemyBase>& Add)
+	{
+		return !IsValid(Add);
+	});
+
 	const UHellwakeAttributeSet* Attr = AbilitySystemComponent ? AbilitySystemComponent->GetSet<UHellwakeAttributeSet>() : nullptr;
 	const float HpPct = (Attr && Attr->GetMaxHealth() > 0.f) ? Attr->GetHealth() / Attr->GetMaxHealth() : 1.f;
 
@@ -83,8 +101,6 @@ void AHellwakeGravewarden::UpdateAI(float DeltaSeconds, AActor* Target)
 
 	if (CurrentPhase != EHellwakeGravewardenPhase::Phase1 && ToTarget.Size2D() < SoulrendAuraRadiusCm)
 	{
-		// The final Niagara aura will replace this, but the native slice needs
-		// a visible read for the phase-2+ danger zone immediately.
 		if (FMath::FRand() < DeltaSeconds * 3.f)
 		{
 			DrawDebugCircle(GetWorld(), GetActorLocation() + FVector(0.f, 0.f, 12.f), SoulrendAuraRadiusCm, 48,
@@ -170,6 +186,7 @@ void AHellwakeGravewarden::SpawnAdds(TSubclassOf<AHellwakeEnemyBase> EnemyClass,
 		if (AHellwakeEnemyBase* Add = GetWorld()->SpawnActor<AHellwakeEnemyBase>(EnemyClass, SpawnLocation, FRotator::ZeroRotator, Params))
 		{
 			Add->InitializeFromDefinition(*Definition, DefinitionRowName);
+			SpawnedAdds.Add(Add);
 			DrawDebugSphere(GetWorld(), SpawnLocation + FVector(0.f, 0.f, 80.f), 90.f, 12,
 				DefinitionRowName == TEXT("wraith") ? FColor::Purple : FColor::Red, false, 0.4f, 0, 5.f);
 		}
@@ -267,6 +284,15 @@ void AHellwakeGravewarden::HandleDeath()
 
 	AActor* Target = FindPrimaryTarget();
 	Super::HandleDeath();
+
+	for (const TObjectPtr<AHellwakeEnemyBase>& Add : SpawnedAdds)
+	{
+		if (IsValid(Add))
+		{
+			Add->Destroy();
+		}
+	}
+	SpawnedAdds.Reset();
 
 	DrawDebugSphere(GetWorld(), GetActorLocation() + FVector(0.f, 0.f, 180.f), 520.f, 32, FColor::Orange, false, 0.8f, 0, 14.f);
 	DrawDebugCircle(GetWorld(), GetActorLocation() + FVector(0.f, 0.f, 12.f), 2200.f, 80, FColor::Orange,
