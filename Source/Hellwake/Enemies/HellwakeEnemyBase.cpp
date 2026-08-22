@@ -3,14 +3,17 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "Attributes/HellwakeAttributeSet.h"
+#include "Camera/HellwakeCameraDirector.h"
 #include "Combat/HellwakeVitalityComponent.h"
 #include "GameplayEffects/HellwakeGE_Damage.h"
 #include "Loot/HellwakeLootDropComponent.h"
 #include "Data/HellwakeEnemyDefinition.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Components/StaticMeshComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
+#include "DrawDebugHelpers.h"
 #include "Engine/DataTable.h"
+#include "Engine/StaticMesh.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "UObject/ConstructorHelpers.h"
@@ -186,23 +189,42 @@ void AHellwakeEnemyBase::TryAttack(float DeltaSeconds, AActor* Target)
 
 	if (RoleTag == HellwakeTags::Enemy_Role_Acolyte)
 	{
+		// The browser prototype snapshots the target point when the cast begins.
+		// Preserve that dodgeable behavior instead of homing on the player for
+		// the full 0.85-second wind-up.
+		const FVector CapturedImpactPoint = Target->GetActorLocation();
+		DrawDebugCircle(GetWorld(), CapturedImpactPoint + FVector(0.f, 0.f, 8.f), 260.f, 40, FColor::Orange,
+			false, 0.85f, 0, 6.f, FVector(1.f, 0.f, 0.f), FVector(0.f, 1.f, 0.f), false);
+		DrawDebugLine(GetWorld(), GetActorLocation() + FVector(0.f, 0.f, 100.f), CapturedImpactPoint + FVector(0.f, 0.f, 80.f),
+			FColor::Orange, false, 0.85f, 0, 3.f);
+
 		TWeakObjectPtr<AActor> WeakTarget = Target;
 		TWeakObjectPtr<AHellwakeEnemyBase> WeakSelf = this;
 		FTimerHandle BoltHandle;
-		GetWorld()->GetTimerManager().SetTimer(BoltHandle, [WeakSelf, WeakTarget]()
+		GetWorld()->GetTimerManager().SetTimer(BoltHandle, [WeakSelf, WeakTarget, CapturedImpactPoint]()
 		{
-			if (WeakSelf.IsValid() && WeakTarget.IsValid() && !WeakSelf->IsDead())
+			if (!WeakSelf.IsValid() || !WeakTarget.IsValid() || WeakSelf->IsDead())
 			{
-				const float Distance = FVector::Dist2D(WeakSelf->GetActorLocation(), WeakTarget->GetActorLocation());
-				if (Distance < WeakSelf->AttackRangeCm + 120.f)
+				return;
+			}
+
+			DrawDebugSphere(WeakSelf->GetWorld(), CapturedImpactPoint + FVector(0.f, 0.f, 70.f), 90.f, 12, FColor::Orange, false, 0.18f, 0, 6.f);
+			if (FVector::Dist2D(WeakTarget->GetActorLocation(), CapturedImpactPoint) < 260.f)
+			{
+				WeakSelf->DealDamageTo(WeakTarget.Get(), WeakSelf->AttackDamage);
+				if (UHellwakeCameraDirector* Director = WeakTarget->FindComponentByClass<UHellwakeCameraDirector>())
 				{
-					WeakSelf->DealDamageTo(WeakTarget.Get(), WeakSelf->AttackDamage);
+					Director->TriggerShake(0.24f);
 				}
 			}
 		}, 0.85f, false);
 	}
 	else
 	{
+		const FVector Start = GetActorLocation() + FVector(0.f, 0.f, 70.f);
+		const FVector End = Start + GetActorForwardVector() * FMath::Min(AttackRangeCm + 120.f, 460.f);
+		DrawDebugDirectionalArrow(GetWorld(), Start, End, 90.f, FColor::Red, false, 0.30f, 0, 5.f);
+
 		TWeakObjectPtr<AActor> WeakTarget = Target;
 		TWeakObjectPtr<AHellwakeEnemyBase> WeakSelf = this;
 		FTimerHandle SwingHandle;
@@ -214,6 +236,11 @@ void AHellwakeEnemyBase::TryAttack(float DeltaSeconds, AActor* Target)
 				if (Distance < WeakSelf->AttackRangeCm + 120.f)
 				{
 					WeakSelf->DealDamageTo(WeakTarget.Get(), WeakSelf->AttackDamage);
+					DrawDebugSphere(WeakSelf->GetWorld(), WeakTarget->GetActorLocation() + FVector(0.f, 0.f, 70.f), 55.f, 10, FColor::Red, false, 0.12f, 0, 5.f);
+					if (UHellwakeCameraDirector* Director = WeakTarget->FindComponentByClass<UHellwakeCameraDirector>())
+					{
+						Director->TriggerShake(WeakSelf->RoleTag == HellwakeTags::Enemy_Role_Wraith ? 0.16f : 0.22f);
+					}
 				}
 			}
 		}, 0.3f, false);
@@ -282,6 +309,8 @@ void AHellwakeEnemyBase::HandleDeath()
 		}
 	}
 
+	DrawDebugSphere(GetWorld(), GetActorLocation() + FVector(0.f, 0.f, 70.f), bIsElite ? 240.f : 100.f, 16,
+		bIsElite ? FColor::Orange : FColor::Red, false, 0.25f, 0, bIsElite ? 12.f : 6.f);
 	SetActorEnableCollision(false);
 }
 
