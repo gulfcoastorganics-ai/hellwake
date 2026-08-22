@@ -1,10 +1,12 @@
 #include "Abilities/HellwakeAbility_Bulwark.h"
 #include "AbilitySystemComponent.h"
+#include "GameplayEffects/HellwakeGE_Bulwark.h"
 #include "HellwakeGameplayTags.h"
 
 UHellwakeAbility_Bulwark::UHellwakeAbility_Bulwark()
 {
 	AbilityTags.AddTag(HellwakeTags::Ability_Bulwark);
+	BulwarkEffectClass = UHellwakeGE_Bulwark::StaticClass();
 }
 
 void UHellwakeAbility_Bulwark::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -27,7 +29,6 @@ void UHellwakeAbility_Bulwark::ActivateAbility(const FGameplayAbilitySpecHandle 
 				ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data);
 			}
 		}
-		// TODO(VFX): shockwave(hero.position, 4.5, 0x8ec8e6) -> NS_Bulwark_Raise at avatar location.
 	}
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, false, false);
