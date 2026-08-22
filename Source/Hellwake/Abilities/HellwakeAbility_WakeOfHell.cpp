@@ -3,6 +3,7 @@
 #include "AbilitySystemInterface.h"
 #include "GameplayEffects/HellwakeGE_Damage.h"
 #include "GameplayEffects/HellwakeGE_CinematicLock.h"
+#include "GameplayEffects/HellwakeGE_AbilityRuntime.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Actor.h"
 #include "HellwakeGameplayTags.h"
@@ -12,6 +13,7 @@ UHellwakeAbility_WakeOfHell::UHellwakeAbility_WakeOfHell()
 	AbilityTags.AddTag(HellwakeTags::Ability_WakeOfHell);
 	DamageEffectClass = UHellwakeGE_Damage::StaticClass();
 	CinematicLockEffectClass = UHellwakeGE_CinematicLock::StaticClass();
+	CooldownGameplayEffectClass = UHellwakeGE_Cooldown_WakeOfHell::StaticClass();
 }
 
 void UHellwakeAbility_WakeOfHell::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
