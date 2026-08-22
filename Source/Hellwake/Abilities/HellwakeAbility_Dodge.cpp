@@ -1,6 +1,7 @@
 #include "Abilities/HellwakeAbility_Dodge.h"
 #include "AbilitySystemComponent.h"
 #include "GameplayEffects/HellwakeGE_IFrame.h"
+#include "GameplayEffects/HellwakeGE_AbilityRuntime.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "TimerManager.h"
@@ -10,6 +11,7 @@ UHellwakeAbility_Dodge::UHellwakeAbility_Dodge()
 {
 	AbilityTags.AddTag(HellwakeTags::Ability_Dodge);
 	IFrameEffectClass = UHellwakeGE_IFrame::StaticClass();
+	CooldownGameplayEffectClass = UHellwakeGE_Cooldown_Dodge::StaticClass();
 }
 
 void UHellwakeAbility_Dodge::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
