@@ -2,30 +2,22 @@
 // own ASC (each enemy is a self-contained ASC owner — simplest correct GAS
 // setup for AI-controlled minions; see project-bible/unreal-implementation.md
 // if you want to switch to a shared pool later for perf).
-//
-// AI: this class's Tick() is a direct, verified port of enemyAI(e, dt) from
-// hellwake-game.js — ring-hold positioning around the player, melee/ranged
-// attack selection by RoleTag, telegraphed ranged bolts for the Acolyte.
-// It is the *reference behavior*, written in C++ so it is runnable and
-// testable immediately; project-bible/enemies.md documents how to lift each
-// piece into a State Tree (NavMesh MoveTo task for the ring-hold, a
-// Sequence for the telegraph-then-fire ranged attack, etc.) as the intended
-// production AI authoring path once the Editor is available. Do not delete
-// this Tick fallback until the State Tree replacement is verified to
-// reproduce it — it's the only currently-testable copy of this behavior.
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
 #include "GameplayTagContainer.h"
+#include "Data/HellwakeEnemyDefinition.h"
 #include "HellwakeEnemyBase.generated.h"
 
 class UAbilitySystemComponent;
 class UHellwakeAttributeSet;
 class UHellwakeVitalityComponent;
+class UHellwakeLootDropComponent;
 class UGameplayEffect;
-struct FHellwakeEnemyDefinition;
+class UDataTable;
+struct FGameplayEventData;
 
 UCLASS()
 class HELLWAKE_API AHellwakeEnemyBase : public ACharacter, public IAbilitySystemInterface
@@ -39,9 +31,6 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
-	// Applies a DataTable row (see Data/HellwakeEnemyDefinition.h) to this
-	// instance's attributes/tunables. Call right after SpawnActor, before
-	// BeginPlay does its own init (or re-call to hot-swap for testing).
 	UFUNCTION(BlueprintCallable, Category = "Hellwake|Enemy")
 	void InitializeFromDefinition(const FHellwakeEnemyDefinition& Definition, FName RowName);
 
@@ -62,18 +51,17 @@ protected:
 	TObjectPtr<UHellwakeVitalityComponent> VitalityComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Hellwake|Loot")
-	TObjectPtr<class UHellwakeLootDropComponent> LootDropComponent;
+	TObjectPtr<UHellwakeLootDropComponent> LootDropComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hellwake|Data")
 	FName EnemyDefinitionRowName;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hellwake|Data")
-	TObjectPtr<class UDataTable> EnemyDefinitionTable;
+	TObjectPtr<UDataTable> EnemyDefinitionTable;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hellwake|Combat")
 	TSubclassOf<UGameplayEffect> DamageEffectClass;
 
-	// --- Ported tunables (see FHellwakeEnemyDefinition for authoritative field docs) ---
 	UPROPERTY(BlueprintReadOnly, Category = "Hellwake|Enemy")
 	float MoveSpeedCm = 440.f;
 	UPROPERTY(BlueprintReadOnly, Category = "Hellwake|Enemy")
@@ -91,9 +79,6 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Hellwake|Enemy")
 	bool bIsElite = false;
 
-	// Random angular slot on the engagement ring, radians. Prototype:
-	// `e.slot = Math.random() * Math.PI * 2`; Cinder Wraiths additionally
-	// orbit (`slot + anim*0.5`).
 	UPROPERTY()
 	float RingSlotRadians = 0.f;
 
@@ -109,30 +94,15 @@ protected:
 	UPROPERTY()
 	float AnimTime = 0.f;
 
-	// Deals damage via DamageEffectClass to the target actor's ASC.
 	UFUNCTION(BlueprintCallable, Category = "Hellwake|Combat")
 	void DealDamageTo(AActor* Target, float Damage, bool bCrit = false);
 
-	// Tries a melee/ranged attack against Target if in range and off
-	// cooldown. Called from Tick(); split out so AHellwakeGravewarden's
-	// override can reuse the cooldown/range plumbing for its own attacks.
 	virtual void TryAttack(float DeltaSeconds, AActor* Target);
-
-	// Finds the current combat target (the player pawn — this vertical
-	// slice is single-target/single-player by design, matching the
-	// prototype's single `hero` reference).
 	AActor* FindPrimaryTarget() const;
 
 	void OnDeathEvent(const FGameplayEventData* Payload);
 	virtual void HandleDeath();
-
-	// Per-frame AI while alive. Base: ring-hold positioning + TryAttack.
-	// AHellwakeGravewarden overrides this entirely with its 3-phase logic.
 	virtual void UpdateAI(float DeltaSeconds, AActor* Target);
-
-	// Post-death sink/tumble before despawn. Prototype:
-	// `e.obj.position.y -= dt*1.2; e.obj.rotation.z += dt*1.1;` then removed
-	// after 0.9s (2.6s for elites).
 	virtual void UpdateDeathTick(float DeltaSeconds);
 
 	UPROPERTY()
