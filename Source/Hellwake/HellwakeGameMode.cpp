@@ -13,9 +13,6 @@
 AHellwakeGameMode::AHellwakeGameMode()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
-	// Keep the first native PIE milestone independent of Blueprint class
-	// defaults. Blueprint subclasses can still override both later.
 	DefaultPawnClass = AHellwakeCharacter::StaticClass();
 	PlayerControllerClass = AHellwakePlayerController::StaticClass();
 }
@@ -88,10 +85,11 @@ void AHellwakeGameMode::SpawnEnemiesForStage(EHellwakeEncounterStage Stage)
 	const int32 Count = FMath::Min(StageRow->SpawnRowNames.Num(), StageRow->SpawnLocations.Num());
 	for (int32 i = 0; i < Count; ++i)
 	{
-		const FHellwakeEnemyDefinition* EnemyRow = EnemyDefinitionTable->FindRow<FHellwakeEnemyDefinition>(StageRow->SpawnRowNames[i], TEXT("SpawnEnemiesForStage"));
+		const FName EnemyRowName = StageRow->SpawnRowNames[i];
+		const FHellwakeEnemyDefinition* EnemyRow = EnemyDefinitionTable->FindRow<FHellwakeEnemyDefinition>(EnemyRowName, TEXT("SpawnEnemiesForStage"));
 		if (!EnemyRow || EnemyRow->PawnClass.IsNull())
 		{
-			UE_LOG(LogHellwake, Warning, TEXT("SpawnEnemiesForStage: no PawnClass for row '%s'"), *StageRow->SpawnRowNames[i].ToString());
+			UE_LOG(LogHellwake, Warning, TEXT("SpawnEnemiesForStage: no PawnClass for row '%s'"), *EnemyRowName.ToString());
 			continue;
 		}
 
@@ -107,11 +105,12 @@ void AHellwakeGameMode::SpawnEnemiesForStage(EHellwakeEncounterStage Stage)
 
 		if (AHellwakeGravewarden* Warden = Cast<AHellwakeGravewarden>(SpawnedActor))
 		{
+			Warden->InitializeFromDefinition(*EnemyRow, EnemyRowName);
 			Encounter->RegisterGravewarden(Warden);
 		}
 		else if (AHellwakeEnemyBase* Enemy = Cast<AHellwakeEnemyBase>(SpawnedActor))
 		{
-			Enemy->InitializeFromDefinition(*EnemyRow, StageRow->SpawnRowNames[i]);
+			Enemy->InitializeFromDefinition(*EnemyRow, EnemyRowName);
 			Spawned.Add(Enemy);
 		}
 	}
