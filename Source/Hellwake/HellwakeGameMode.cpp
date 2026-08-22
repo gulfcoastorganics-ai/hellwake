@@ -11,6 +11,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/DataTable.h"
 #include "Engine/DirectionalLight.h"
+#include "Engine/StaticMesh.h"
 #include "Engine/StaticMeshActor.h"
 #include "HellwakeGameplayTags.h"
 #include "Kismet/GameplayStatics.h"
@@ -180,9 +181,6 @@ void AHellwakeGameMode::BuildNativeFallbackArena()
 		Block->SetActorScale3D(Scale);
 	};
 
-	// 100 cm engine cube: floor top is -100 cm, just below the default
-	// character capsule bottom. Walls frame the ~60 m prototype run from
-	// the plaza entrance through the boss arena.
 	SpawnBlock(FVector(0.f, -300.f, -200.f), FVector(40.f, 60.f, 2.f));
 	SpawnBlock(FVector(-2050.f, -300.f, 300.f), FVector(1.f, 60.f, 8.f));
 	SpawnBlock(FVector(2050.f, -300.f, 300.f), FVector(1.f, 60.f, 8.f));
@@ -235,6 +233,16 @@ void AHellwakeGameMode::HandleStageChanged(EHellwakeEncounterStage NewStage)
 			break;
 		default:
 			break;
+		}
+	}
+
+	// Gravewarden is spawned during Intro for presentation, but its Tick is
+	// deliberately dormant until the state machine actually enters Boss.
+	if (NewStage == EHellwakeEncounterStage::Boss && Encounter)
+	{
+		if (AHellwakeGravewarden* Warden = Encounter->GetGravewarden())
+		{
+			Warden->SetActorTickEnabled(true);
 		}
 	}
 
@@ -314,6 +322,10 @@ void AHellwakeGameMode::SpawnEnemiesForStage(EHellwakeEncounterStage Stage)
 		Enemy->InitializeFromDefinition(*EnemyDef, Spawn.RowName);
 		if (AHellwakeGravewarden* Warden = Cast<AHellwakeGravewarden>(Enemy))
 		{
+			if (Stage == EHellwakeEncounterStage::Intro)
+			{
+				Warden->SetActorTickEnabled(false);
+			}
 			Encounter->RegisterGravewarden(Warden);
 		}
 		else
