@@ -47,6 +47,8 @@ public:
 	void BeginCinematic(float Duration);
 	UFUNCTION(BlueprintCallable, Category = "Hellwake|Cinematic")
 	void EndCinematic();
+	UFUNCTION(BlueprintCallable, Category = "Hellwake|Camera")
+	void SetBossFightCameraActive(bool bActive);
 
 protected:
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
@@ -63,8 +65,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Hellwake|Combat")
 	TObjectPtr<UHellwakeVitalityComponent> VitalityComponent;
 
-	// Engine-basic-shape fallback so Kaervoss is visible in a clean native
-	// checkout. A skeletal mesh Blueprint can hide/replace this component.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Hellwake|Fallback")
 	TObjectPtr<UStaticMeshComponent> PlaceholderMesh;
 
