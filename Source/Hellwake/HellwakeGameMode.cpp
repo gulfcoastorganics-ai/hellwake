@@ -181,8 +181,8 @@ void AHellwakeGameMode::BuildNativeFallbackArena()
 	};
 
 	// 100 cm engine cube: floor top is -100 cm, just below the default
-	// character capsule bottom. Walls frame the entire 5.5 km-equivalent
-	// prototype run from the plaza entrance through the boss arena.
+	// character capsule bottom. Walls frame the ~60 m prototype run from
+	// the plaza entrance through the boss arena.
 	SpawnBlock(FVector(0.f, -300.f, -200.f), FVector(40.f, 60.f, 2.f));
 	SpawnBlock(FVector(-2050.f, -300.f, 300.f), FVector(1.f, 60.f, 8.f));
 	SpawnBlock(FVector(2050.f, -300.f, 300.f), FVector(1.f, 60.f, 8.f));
@@ -216,6 +216,28 @@ void AHellwakeGameMode::Tick(float DeltaSeconds)
 
 void AHellwakeGameMode::HandleStageChanged(EHellwakeEncounterStage NewStage)
 {
+	if (AHellwakeCharacter* Player = Cast<AHellwakeCharacter>(UGameplayStatics::GetPlayerPawn(this, 0)))
+	{
+		switch (NewStage)
+		{
+		case EHellwakeEncounterStage::Intro:
+			Player->SetBossFightCameraActive(false);
+			Player->BeginCinematic(3.4f);
+			break;
+		case EHellwakeEncounterStage::Boss:
+			Player->EndCinematic();
+			Player->SetBossFightCameraActive(true);
+			break;
+		case EHellwakeEncounterStage::Reward:
+		case EHellwakeEncounterStage::Done:
+			Player->EndCinematic();
+			Player->SetBossFightCameraActive(false);
+			break;
+		default:
+			break;
+		}
+	}
+
 	SpawnEnemiesForStage(NewStage);
 }
 
