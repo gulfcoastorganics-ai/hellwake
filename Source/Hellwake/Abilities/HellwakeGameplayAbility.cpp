@@ -1,16 +1,12 @@
 #include "Abilities/HellwakeGameplayAbility.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystemInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "HellwakeGameplayTags.h"
 
 UHellwakeGameplayAbility::UHellwakeGameplayAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-
-	// Prototype gate: `if (P.dead || cine > 0) return;` for every ability
-	// and both attacks. Death and cinematic locks are applied as owned
-	// tags on the ASC (HellwakeCharacter::Die / BeginCinematic) so every
-	// ability inherits the block for free instead of re-checking by hand.
 	ActivationBlockedTags.AddTag(HellwakeTags::State_Dead);
 	ActivationBlockedTags.AddTag(HellwakeTags::State_Cinematic);
 }
@@ -37,19 +33,20 @@ int32 UHellwakeGameplayAbility::ApplyRadialDamage(const FVector& Center, float R
 		{
 			continue;
 		}
+
 		IAbilitySystemInterface* TargetASI = Cast<IAbilitySystemInterface>(Target);
 		UAbilitySystemComponent* TargetASC = TargetASI ? TargetASI->GetAbilitySystemComponent() : nullptr;
 		if (!TargetASC)
 		{
 			continue;
 		}
+
 		if (FVector::Dist(Target->GetActorLocation(), Center) > RadiusCm)
 		{
 			continue;
 		}
 
 		const float Damage = FMath::FRandRange(MinDamage, MaxDamage);
-
 		FGameplayEffectContextHandle Context = SourceASC->MakeEffectContext();
 		Context.AddSourceObject(this);
 		FGameplayEffectSpecHandle Spec = SourceASC->MakeOutgoingSpec(DamageEffectClass, GetAbilityLevel(), Context);
@@ -64,5 +61,6 @@ int32 UHellwakeGameplayAbility::ApplyRadialDamage(const FVector& Center, float R
 			++HitCount;
 		}
 	}
+
 	return HitCount;
 }
