@@ -17,11 +17,13 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "TimerManager.h"
+#include "UObject/ConstructorHelpers.h"
 #include "HellwakeGameplayTags.h"
 #include "Hellwake.h"
 
@@ -36,6 +38,16 @@ AHellwakeCharacter::AHellwakeCharacter()
 	AttributeSet = CreateDefaultSubobject<UHellwakeAttributeSet>(TEXT("AttributeSet"));
 	CombatComponent = CreateDefaultSubobject<UHellwakeCombatComponent>(TEXT("CombatComponent"));
 	VitalityComponent = CreateDefaultSubobject<UHellwakeVitalityComponent>(TEXT("VitalityComponent"));
+
+	PlaceholderMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlaceholderMesh"));
+	PlaceholderMesh->SetupAttachment(RootComponent);
+	PlaceholderMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	PlaceholderMesh->SetRelativeScale3D(FVector(0.62f, 0.62f, 1.75f));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> PlayerMeshFinder(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
+	if (PlayerMeshFinder.Succeeded())
+	{
+		PlaceholderMesh->SetStaticMesh(PlayerMeshFinder.Object);
+	}
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -156,9 +168,6 @@ void AHellwakeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	}
 	else
 	{
-		// Terminal/native first-build fallback: these mappings live in
-		// DefaultInput.ini, so the pawn is controllable before binary Enhanced
-		// Input assets are authored in-editor.
 		PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AHellwakeCharacter::HandleMoveForward);
 		PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AHellwakeCharacter::HandleMoveRight);
 	}
