@@ -1,11 +1,13 @@
 #include "Abilities/HellwakeAbility_Emberbrand.h"
 #include "AbilitySystemComponent.h"
+#include "GameplayEffects/HellwakeGE_Damage.h"
 #include "GameFramework/Actor.h"
 #include "HellwakeGameplayTags.h"
 
 UHellwakeAbility_Emberbrand::UHellwakeAbility_Emberbrand()
 {
 	AbilityTags.AddTag(HellwakeTags::Ability_Emberbrand);
+	DamageEffectClass = UHellwakeGE_Damage::StaticClass();
 }
 
 void UHellwakeAbility_Emberbrand::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -22,10 +24,7 @@ void UHellwakeAbility_Emberbrand::ActivateAbility(const FGameplayAbilitySpecHand
 	if (Avatar)
 	{
 		const FVector Origin = Avatar->GetActorLocation() + Avatar->GetActorForwardVector() * ForwardOffsetCm;
-		ApplyRadialDamage(Origin, RadiusCm, MinDamage, MaxDamage, DamageEffectClass, /*bAlwaysCrit=*/true);
-
-		// TODO(VFX): shockwave(fx,7,0xffa040) + burst(fx,1.2,1.5,30) -> NS_Emberbrand_Burst at Origin.
-		// TODO(Camera): shake = max(shake, 0.5) -> camera shake asset, magnitude ~0.5 of the standard curve.
+		ApplyRadialDamage(Origin, RadiusCm, MinDamage, MaxDamage, DamageEffectClass, true);
 	}
 
 	if (ASC && EmberStatusEffectClass)
