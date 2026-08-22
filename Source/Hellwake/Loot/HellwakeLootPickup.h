@@ -11,6 +11,8 @@
 class USphereComponent;
 class UStaticMeshComponent;
 class UPointLightComponent;
+class UPrimitiveComponent;
+class UDataTable;
 
 UCLASS()
 class HELLWAKE_API AHellwakeLootPickup : public AActor
@@ -23,14 +25,12 @@ public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 
-	// Row name into DT_LootDefinitions ("common"/"magic"/"rare"/"legendary").
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Hellwake|Loot")
 	FName RarityRowName;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hellwake|Loot")
-	TObjectPtr<class UDataTable> LootDefinitionTable;
+	TObjectPtr<UDataTable> LootDefinitionTable;
 
-	// Prototype: 2.2u = 220cm pickup radius.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hellwake|Loot")
 	float PickupRadiusCm = 220.f;
 
