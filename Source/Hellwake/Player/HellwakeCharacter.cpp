@@ -2,6 +2,15 @@
 #include "AbilitySystemComponent.h"
 #include "Attributes/HellwakeAttributeSet.h"
 #include "Abilities/HellwakeGameplayAbility.h"
+#include "Abilities/HellwakeAbility_LightAttack.h"
+#include "Abilities/HellwakeAbility_HeavyAttack.h"
+#include "Abilities/HellwakeAbility_Dodge.h"
+#include "Abilities/HellwakeAbility_Emberbrand.h"
+#include "Abilities/HellwakeAbility_Bulwark.h"
+#include "Abilities/HellwakeAbility_Ruinfall.h"
+#include "Abilities/HellwakeAbility_WakeOfHell.h"
+#include "GameplayEffects/HellwakeGE_PlayerDefaults.h"
+#include "GameplayEffects/HellwakeGE_PassiveRegen.h"
 #include "Combat/HellwakeCombatComponent.h"
 #include "Combat/HellwakeVitalityComponent.h"
 #include "Camera/HellwakeCameraDirector.h"
@@ -11,6 +20,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "TimerManager.h"
 #include "HellwakeGameplayTags.h"
 #include "Hellwake.h"
 
@@ -20,37 +30,28 @@ AHellwakeCharacter::AHellwakeCharacter()
 
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
-	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Full);
 
 	AttributeSet = CreateDefaultSubobject<UHellwakeAttributeSet>(TEXT("AttributeSet"));
-
 	CombatComponent = CreateDefaultSubobject<UHellwakeCombatComponent>(TEXT("CombatComponent"));
 	VitalityComponent = CreateDefaultSubobject<UHellwakeVitalityComponent>(TEXT("VitalityComponent"));
 
-	// Facing follows movement direction only — no controller yaw binding.
-	// Prototype: `hero.rotation.y = P.facing` derived purely from velocity.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	// Prototype accel 62 / speed 9.4 -> time-to-max-speed ~0.15s; RotationRate
-	// 14*dt lerp on facing translates to a fast, snappy turn rate.
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 620.f, 0.f);
-	GetCharacterMovement()->MaxAcceleration = 6200.f;   // 62 u/s^2 * 100
-	GetCharacterMovement()->MaxWalkSpeed = 940.f;        // 9.4 u/s * 100
+	GetCharacterMovement()->MaxAcceleration = 6200.f;
+	GetCharacterMovement()->MaxWalkSpeed = 940.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 4000.f;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	// Prototype CAM_OFF = (0, 27, 25); camera.lookAt(hero.xz, y=2.4, z-4.6).
-	// A fixed isometric boom with no arm-length/rotation input reproduces
-	// this: rotate to look down-and-forward at the approved ~34deg FOV
-	// framing, do not let player input rotate it.
 	CameraBoom->TargetArmLength = 3700.f;
 	CameraBoom->SetRelativeRotation(FRotator(-47.f, -45.f, 0.f));
 	CameraBoom->bDoCollisionTest = false;
 	CameraBoom->bEnableCameraLag = true;
-	CameraBoom->CameraLagSpeed = 6.f; // prototype: camTarget.lerp(focus, min(1,6*dt))
+	CameraBoom->CameraLagSpeed = 6.f;
 	CameraBoom->bInheritPitch = false;
 	CameraBoom->bInheritYaw = false;
 	CameraBoom->bInheritRoll = false;
@@ -61,6 +62,20 @@ AHellwakeCharacter::AHellwakeCharacter()
 	TopDownCamera->bUsePawnControlRotation = false;
 
 	CameraDirector = CreateDefaultSubobject<UHellwakeCameraDirector>(TEXT("CameraDirector"));
+
+	// Native defaults make the C++ pawn playable enough for first-build/PIE
+	// validation without requiring Blueprint subclasses just to grant GAS.
+	DefaultAttributesEffectClass = UHellwakeGE_PlayerDefaults::StaticClass();
+	PassiveRegenEffectClass = UHellwakeGE_PassiveRegen::StaticClass();
+	StartingAbilities = {
+		UHellwakeAbility_LightAttack::StaticClass(),
+		UHellwakeAbility_HeavyAttack::StaticClass(),
+		UHellwakeAbility_Dodge::StaticClass(),
+		UHellwakeAbility_Emberbrand::StaticClass(),
+		UHellwakeAbility_Bulwark::StaticClass(),
+		UHellwakeAbility_Ruinfall::StaticClass(),
+		UHellwakeAbility_WakeOfHell::StaticClass()
+	};
 }
 
 void AHellwakeCharacter::PossessedBy(AController* NewController)
@@ -124,13 +139,6 @@ void AHellwakeCharacter::BeginPlay()
 void AHellwakeCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	// Passive regen (Wrath 4.5/s, Health 1.6/s while alive and not full) is
-	// implemented as an infinite periodic GameplayEffect
-	// (GE_Hellwake_PassiveRegen, applied once in PossessedBy) rather than
-	// here, so it keeps working under GAS prediction/replication. Nothing
-	// prototype-specific belongs in TickActor for this character; CombatComponent
-	// owns per-frame facing/i-frame bookkeeping that isn't already covered
-	// by CharacterMovementComponent + GameplayEffect durations.
 }
 
 UAbilitySystemComponent* AHellwakeCharacter::GetAbilitySystemComponent() const
@@ -153,10 +161,7 @@ void AHellwakeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	{
 		EIC->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHellwakeCharacter::HandleMove);
 	}
-	// LMB/RMB/Shift/Q/F/E/R all just resolve to "try activate ability with
-	// this tag" — CanActivateAbility (cost/cooldown/blocked-tags) does the
-	// rest, matching the prototype's uniform `if (cds[key] > 0) return;`
-	// gate at the top of every input handler.
+
 	auto BindAbility = [this, EIC](UInputAction* Action, FGameplayTag Tag)
 	{
 		if (Action)
@@ -175,7 +180,7 @@ void AHellwakeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 void AHellwakeCharacter::HandleMove(const FInputActionValue& Value)
 {
-	if (GetHellwakeAttributeSet() == nullptr || AbilitySystemComponent == nullptr)
+	if (!AttributeSet || !AbilitySystemComponent)
 	{
 		return;
 	}
@@ -186,9 +191,6 @@ void AHellwakeCharacter::HandleMove(const FInputActionValue& Value)
 	}
 
 	const FVector2D Axis = Value.Get<FVector2D>();
-	// World-axis movement, not camera-relative-rotated: prototype moveDir()
-	// maps w/s/a/d straight onto +-Z/+-X with no rotation by camera yaw
-	// (the camera never yaws), so this is already correct as-is.
 	const FVector Direction = FVector(Axis.X, -Axis.Y, 0.f);
 	if (!Direction.IsNearlyZero())
 	{
@@ -219,7 +221,6 @@ void AHellwakeCharacter::Die()
 	AbilitySystemComponent->AddLooseGameplayTag(HellwakeTags::State_Dead);
 	AbilitySystemComponent->CancelAbilities();
 
-	// TODO(Presentation): banner('YOU FELL — RESPAWNING') -> broadcast to HUD.
 	GetWorld()->GetTimerManager().SetTimer(RespawnHandle, [this]()
 	{
 		if (!AbilitySystemComponent || !AttributeSet)
