@@ -2,6 +2,7 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "Attributes/HellwakeAttributeSet.h"
+#include "GameplayEffects/HellwakeGE_Damage.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -10,6 +11,7 @@
 
 UHellwakeAbility_MeleeAttack::UHellwakeAbility_MeleeAttack()
 {
+	DamageEffectClass = UHellwakeGE_Damage::StaticClass();
 }
 
 void UHellwakeAbility_MeleeAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
