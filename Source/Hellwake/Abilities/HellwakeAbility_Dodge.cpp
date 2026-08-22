@@ -2,6 +2,7 @@
 #include "AbilitySystemComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "TimerManager.h"
 #include "HellwakeGameplayTags.h"
 
 UHellwakeAbility_Dodge::UHellwakeAbility_Dodge()
@@ -26,8 +27,6 @@ void UHellwakeAbility_Dodge::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 		return;
 	}
 
-	// Prototype: `moveDir()` from current WASD state, falling back to
-	// facing if the player is standing still.
 	FVector Direction = AvatarCharacter->GetLastMovementInputVector();
 	if (Direction.IsNearlyZero())
 	{
@@ -51,9 +50,6 @@ void UHellwakeAbility_Dodge::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 			ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data);
 		}
 	}
-
-	// TODO(VFX): burst(hero.position, 0.4, hero.position, 0xaab4c4, 0.5, 10)
-	// -> spawn Niagara system NS_Dodge_Dust at AvatarCharacter's feet here.
 
 	GetWorld()->GetTimerManager().SetTimer(EndHandle, this, &UHellwakeAbility_Dodge::FinishDodge, IFrameDuration, false);
 }
