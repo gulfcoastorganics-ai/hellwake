@@ -4,6 +4,8 @@
 #include "Data/HellwakeEnemyDefinition.h"
 #include "Enemies/HellwakeEnemyBase.h"
 #include "Enemies/HellwakeGravewarden.h"
+#include "Player/HellwakeCharacter.h"
+#include "Player/HellwakePlayerController.h"
 #include "Engine/DataTable.h"
 #include "Kismet/GameplayStatics.h"
 #include "Hellwake.h"
@@ -11,6 +13,11 @@
 AHellwakeGameMode::AHellwakeGameMode()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	// Keep the first native PIE milestone independent of Blueprint class
+	// defaults. Blueprint subclasses can still override both later.
+	DefaultPawnClass = AHellwakeCharacter::StaticClass();
+	PlayerControllerClass = AHellwakePlayerController::StaticClass();
 }
 
 void AHellwakeGameMode::BeginPlay()
