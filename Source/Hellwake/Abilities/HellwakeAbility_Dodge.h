@@ -5,8 +5,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "TimerManager.h"
 #include "Abilities/HellwakeGameplayAbility.h"
 #include "HellwakeAbility_Dodge.generated.h"
+
+class UGameplayEffect;
 
 UCLASS()
 class HELLWAKE_API UHellwakeAbility_Dodge : public UHellwakeGameplayAbility
@@ -26,11 +29,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hellwake|Dodge")
 	float ImpulseCmPerSec = 2600.f;
 
-	// GE that grants the State.IFrame tag for IFrameDuration seconds.
-	// Authored in-editor as GE_Hellwake_IFrame (duration = SetByCaller or a
-	// fixed 0.34s literal is fine since this value rarely changes).
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hellwake|Dodge")
-	TSubclassOf<class UGameplayEffect> IFrameEffectClass;
+	TSubclassOf<UGameplayEffect> IFrameEffectClass;
 
 private:
 	FTimerHandle EndHandle;
