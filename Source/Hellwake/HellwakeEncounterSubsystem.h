@@ -1,15 +1,6 @@
 // Owns the 8-stage encounter state machine. Direct port of the STAGES
 // array + setStage()/the stage-transition checks inside tick() from
-// hellwake-game.js. Reads stage text/labels/spawns from
-// DT_EncounterStages (Data/HellwakeEncounterStage.h); owns the *transition
-// logic* itself since that's conditional code (position thresholds,
-// alive-enemy counts), not pure data.
-//
-// This is a UWorldSubsystem (not an ActorComponent on GameMode) so both the
-// HUD widget and any gameplay actor can query CurrentStage/GetObjectiveText
-// without needing a GameMode reference — matches how the prototype's
-// `stage()`/`STAGES[stageIdx]` were freely readable from the single render
-// loop.
+// hellwake-game.js.
 #pragma once
 
 #include "CoreMinimal.h"
@@ -32,26 +23,11 @@ class HELLWAKE_API UHellwakeEncounterSubsystem : public UWorldSubsystem
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
-
-	// UWorldSubsystem exposes DoesSupportWorldType, not DoesSupportWorld.
-	// Keep the encounter runtime-only so editor preview worlds do not create
-	// gameplay state unexpectedly.
 	virtual bool DoesSupportWorldType(EWorldType::Type WorldType) const override;
 
-	// Called once by the GameMode/level BeginPlay after the player pawn
-	// exists. Enters Stage::Enter.
 	UFUNCTION(BlueprintCallable, Category = "Hellwake|Encounter")
 	void BeginEncounter();
 
-	// Drive the state machine — call every tick from the GameMode (or a
-	// dedicated tickable actor). Threshold checks:
-	//   enter -> wave1:   player.Y < 1200 (prototype hero.z < 12)
-	//   wave1 -> advance: all wave1 spawns dead, +1s settle
-	//   advance -> wave2: player.Y < -400 (prototype hero.z < -4)
-	//   wave2 -> intro:   all wave2 spawns dead, +1s settle
-	//   intro -> boss:    3.4s elapsed
-	//   boss -> reward:   Gravewarden dead, +2.2s settle
-	//   reward -> done:   legendary loot taken, +1s settle
 	UFUNCTION(BlueprintCallable, Category = "Hellwake|Encounter")
 	void Tick(float DeltaSeconds, const FVector& PlayerLocation);
 
@@ -67,6 +43,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Hellwake|Encounter")
 	int32 GetAliveHostileCount() const;
 
+	UFUNCTION(BlueprintPure, Category = "Hellwake|Encounter")
+	AHellwakeGravewarden* GetGravewarden() const { return TrackedGravewarden; }
+
 	UFUNCTION(BlueprintCallable, Category = "Hellwake|Encounter")
 	void NotifyLegendaryLootTaken() { bLegendaryLootTaken = true; }
 
@@ -79,10 +58,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hellwake|Encounter")
 	TObjectPtr<UDataTable> EncounterStageTable;
 
-	// Wired by the GameMode/level after spawning the wave1/wave2 enemies —
-	// see project-bible/vertical-slice.md for why spawn coordination lives
-	// outside this subsystem (spawn points should be designer-placed level
-	// actors, not this subsystem's concern).
 	UFUNCTION(BlueprintCallable, Category = "Hellwake|Encounter")
 	void RegisterActiveWaveEnemies(const TArray<AHellwakeEnemyBase*>& Enemies);
 
