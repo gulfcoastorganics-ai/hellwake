@@ -6,6 +6,7 @@
 UHellwakeLootDropComponent::UHellwakeLootDropComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
+	LootPickupClass = AHellwakeLootPickup::StaticClass();
 }
 
 void UHellwakeLootDropComponent::RollAndMaybeDrop(float DropChance, const FVector& Location)
@@ -15,13 +16,8 @@ void UHellwakeLootDropComponent::RollAndMaybeDrop(float DropChance, const FVecto
 		return;
 	}
 
-	// Prototype rolls a single second FRand() and thresholds it directly
-	// (roll > 0.93 rare, > 0.6 magic, else common) rather than a weighted
-	// table walk. Reproduced by picking the highest-threshold row the roll
-	// clears, walking RollableRarityRows in the order provided (expected
-	// common -> magic -> rare, ascending RollThreshold).
 	const float RarityRoll = FMath::FRand();
-	FName ChosenRow = RollableRarityRows.Num() > 0 ? RollableRarityRows[0] : NAME_None;
+	FName ChosenRow = TEXT("common");
 	if (LootDefinitionTable)
 	{
 		for (const FName& RowName : RollableRarityRows)
@@ -33,18 +29,18 @@ void UHellwakeLootDropComponent::RollAndMaybeDrop(float DropChance, const FVecto
 			}
 		}
 	}
-
-	if (ChosenRow.IsNone())
+	else
 	{
-		return;
+		// Exact prototype fallback when DT_LootDefinitions has not been
+		// imported yet: >.93 rare, >.60 magic, otherwise common.
+		ChosenRow = RarityRoll > 0.93f ? TEXT("rare") : (RarityRoll > 0.60f ? TEXT("magic") : TEXT("common"));
 	}
 
 	FActorSpawnParameters Params;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-	AHellwakeLootPickup* Pickup = GetWorld()->SpawnActor<AHellwakeLootPickup>(LootPickupClass, Location, FRotator::ZeroRotator, Params);
+	AHellwakeLootPickup* Pickup = GetWorld()->SpawnActor<AHellwakeLootPickup>(LootPickupClass, Location + FVector(0.f, 0.f, 30.f), FRotator::ZeroRotator, Params);
 	if (Pickup)
 	{
-		Pickup->RarityRowName = ChosenRow;
-		Pickup->LootDefinitionTable = LootDefinitionTable;
+		Pickup->ConfigurePickup(ChosenRow, LootDefinitionTable);
 	}
 }
