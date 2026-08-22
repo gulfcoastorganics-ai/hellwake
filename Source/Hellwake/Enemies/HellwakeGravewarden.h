@@ -28,6 +28,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Hellwake|Gravewarden")
 	EHellwakeGravewardenPhase GetPhase() const { return CurrentPhase; }
 
+	UFUNCTION(BlueprintPure, Category = "Hellwake|Gravewarden")
+	int32 GetAliveAddCount() const;
+
 protected:
 	virtual void UpdateAI(float DeltaSeconds, AActor* Target) override;
 	virtual void HandleDeath() override;
@@ -85,6 +88,9 @@ protected:
 private:
 	EHellwakeGravewardenPhase CurrentPhase = EHellwakeGravewardenPhase::Phase1;
 	float AttackCastTimeRemaining = 0.f;
+
+	UPROPERTY()
+	TArray<TObjectPtr<AHellwakeEnemyBase>> SpawnedAdds;
 
 	void EnterPhase(EHellwakeGravewardenPhase NewPhase);
 	void ChooseAndBeginAttack(AActor* Target);
