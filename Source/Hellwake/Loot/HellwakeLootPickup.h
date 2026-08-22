@@ -25,6 +25,12 @@ public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 
+	// Safe to call immediately after SpawnActor. Updates both data fields and
+	// the asset-free visual fallback, so native drops do not depend on a
+	// Blueprint construction script.
+	UFUNCTION(BlueprintCallable, Category = "Hellwake|Loot")
+	void ConfigurePickup(FName InRarityRowName, UDataTable* InLootDefinitionTable = nullptr);
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Hellwake|Loot")
 	FName RarityRowName;
 
