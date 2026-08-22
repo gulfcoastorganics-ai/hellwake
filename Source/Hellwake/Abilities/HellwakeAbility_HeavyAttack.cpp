@@ -1,4 +1,5 @@
 #include "Abilities/HellwakeAbility_HeavyAttack.h"
+#include "GameplayEffects/HellwakeGE_AbilityRuntime.h"
 #include "HellwakeGameplayTags.h"
 
 UHellwakeAbility_HeavyAttack::UHellwakeAbility_HeavyAttack()
@@ -9,5 +10,5 @@ UHellwakeAbility_HeavyAttack::UHellwakeAbility_HeavyAttack()
 	BaseDamage = 260.f;
 	WrathGainOnHit = 9.f;
 	KnockbackImpulse = 130.f;
-	// CooldownGameplayEffectClass = GE_Hellwake_Cooldown_HeavyAttack (0.924s), set in-editor.
+	CooldownGameplayEffectClass = UHellwakeGE_Cooldown_HeavyAttack::StaticClass();
 }
