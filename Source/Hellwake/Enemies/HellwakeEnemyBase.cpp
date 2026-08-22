@@ -8,10 +8,12 @@
 #include "Loot/HellwakeLootDropComponent.h"
 #include "Data/HellwakeEnemyDefinition.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "Components/StaticMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/DataTable.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
+#include "UObject/ConstructorHelpers.h"
 #include "HellwakeGameplayTags.h"
 #include "Hellwake.h"
 
@@ -27,6 +29,16 @@ AHellwakeEnemyBase::AHellwakeEnemyBase()
 	VitalityComponent = CreateDefaultSubobject<UHellwakeVitalityComponent>(TEXT("VitalityComponent"));
 	LootDropComponent = CreateDefaultSubobject<UHellwakeLootDropComponent>(TEXT("LootDropComponent"));
 	DamageEffectClass = UHellwakeGE_Damage::StaticClass();
+
+	PlaceholderMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlaceholderMesh"));
+	PlaceholderMesh->SetupAttachment(RootComponent);
+	PlaceholderMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	PlaceholderMesh->SetRelativeScale3D(FVector(0.58f, 0.58f, 1.25f));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> EnemyMeshFinder(TEXT("/Engine/BasicShapes/Cone.Cone"));
+	if (EnemyMeshFinder.Succeeded())
+	{
+		PlaceholderMesh->SetStaticMesh(EnemyMeshFinder.Object);
+	}
 
 	AIControllerClass = AHellwakeEnemyAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
@@ -61,6 +73,7 @@ void AHellwakeEnemyBase::BeginPlay()
 
 void AHellwakeEnemyBase::InitializeFromDefinition(const FHellwakeEnemyDefinition& Definition, FName RowName)
 {
+	EnemyDefinitionRowName = RowName;
 	RoleTag = Definition.RoleTag;
 	MoveSpeedCm = Definition.MoveSpeedCm;
 	AttackDamage = Definition.AttackDamage;
@@ -75,6 +88,26 @@ void AHellwakeEnemyBase::InitializeFromDefinition(const FHellwakeEnemyDefinition
 	if (UCharacterMovementComponent* Movement = GetCharacterMovement())
 	{
 		Movement->MaxWalkSpeed = MoveSpeedCm;
+	}
+
+	if (PlaceholderMesh)
+	{
+		if (bIsElite || RoleTag == HellwakeTags::Enemy_Role_Gravewarden)
+		{
+			PlaceholderMesh->SetRelativeScale3D(FVector(1.35f, 1.35f, 2.3f));
+		}
+		else if (RoleTag == HellwakeTags::Enemy_Role_Wraith)
+		{
+			PlaceholderMesh->SetRelativeScale3D(FVector(0.45f, 0.45f, 0.95f));
+		}
+		else if (RoleTag == HellwakeTags::Enemy_Role_Acolyte)
+		{
+			PlaceholderMesh->SetRelativeScale3D(FVector(0.52f, 0.52f, 1.45f));
+		}
+		else
+		{
+			PlaceholderMesh->SetRelativeScale3D(FVector(0.62f, 0.62f, 1.2f));
+		}
 	}
 
 	if (AbilitySystemComponent && AttributeSet)
