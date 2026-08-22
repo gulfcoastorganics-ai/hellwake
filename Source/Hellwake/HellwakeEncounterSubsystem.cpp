@@ -4,9 +4,9 @@
 #include "Engine/DataTable.h"
 #include "Hellwake.h"
 
-bool UHellwakeEncounterSubsystem::DoesSupportWorld(UWorld* World) const
+bool UHellwakeEncounterSubsystem::DoesSupportWorldType(EWorldType::Type WorldType) const
 {
-	return World && World->IsGameWorld();
+	return WorldType == EWorldType::Game || WorldType == EWorldType::PIE;
 }
 
 void UHellwakeEncounterSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -64,29 +64,19 @@ void UHellwakeEncounterSubsystem::SetStage(EHellwakeEncounterStage NewStage)
 	{
 		OnBannerRequested.Broadcast(Row->BannerText);
 	}
-
-	// Actual enemy spawning for Wave1/Wave2/Intro is triggered here via the
-	// row's SpawnRowNames/SpawnLocations, but *who* instantiates the actors
-	// (which class per role tag) is level/GameMode responsibility — this
-	// subsystem broadcasts OnStageChanged and the GameMode (see
-	// AHellwakeGameMode::HandleStageChanged) does the SpawnActor calls,
-	// then calls RegisterActiveWaveEnemies so this subsystem can track
-	// clear-condition state. Kept decoupled so encounter *pacing* doesn't
-	// need to know about specific enemy Blueprint classes.
 }
 
 void UHellwakeEncounterSubsystem::Tick(float DeltaSeconds, const FVector& PlayerLocation)
 {
 	StageTimer += DeltaSeconds;
 
-	// Prune dead/destroyed tracked enemies each tick (cheap for a slice-scale roster).
 	TrackedWaveEnemies.RemoveAll([](const TObjectPtr<AHellwakeEnemyBase>& E) { return !IsValid(E); });
 	const int32 AliveCount = GetAliveHostileCount();
 
 	switch (CurrentStage)
 	{
 	case EHellwakeEncounterStage::Enter:
-		if (PlayerLocation.Y < 1200.f) // prototype: hero.z < 12 (1 unit = 100cm)
+		if (PlayerLocation.Y < 1200.f)
 		{
 			SetStage(EHellwakeEncounterStage::Wave1);
 		}
@@ -98,7 +88,7 @@ void UHellwakeEncounterSubsystem::Tick(float DeltaSeconds, const FVector& Player
 		}
 		break;
 	case EHellwakeEncounterStage::Advance:
-		if (PlayerLocation.Y < -400.f) // prototype: hero.z < -4
+		if (PlayerLocation.Y < -400.f)
 		{
 			SetStage(EHellwakeEncounterStage::Wave2);
 		}
