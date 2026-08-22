@@ -221,7 +221,7 @@ void AHellwakeGravewarden::HandleDeath()
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 		if (AHellwakeLootPickup* Pickup = GetWorld()->SpawnActor<AHellwakeLootPickup>(LegendaryLootPickupClass, DropLocation, FRotator::ZeroRotator, Params))
 		{
-			Pickup->ConfigurePickup(TEXT("legendary"));
+			Pickup->ConfigurePickup(TEXT("legendary"), nullptr);
 		}
 	}
 }
