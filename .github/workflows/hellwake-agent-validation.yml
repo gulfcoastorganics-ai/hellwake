@@ -1,0 +1,35 @@
+name: HELLWAKE Agent Validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - fix/ue5-first-build
+      - chore/frontier-agent-orchestration
+
+permissions:
+  contents: read
+
+jobs:
+  low-resource-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Show environment
+        run: |
+          git --version
+          python3 --version
+          bash --version | head -n 1
+
+      - name: Run HELLWAKE available validation gates
+        run: bash scripts/agent/validate_all.sh
+
+      - name: Show next tracked gate
+        if: always()
+        run: bash scripts/agent/next_gate.sh
